@@ -12,7 +12,7 @@ To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz
 * **Layer Stackup:**
   * **`F.Cu` (Top Layer):** All SMD components, Arduino Nano R4 castellated flush mount, short analog signal traces, and a `VREF` active guard ring around the high-impedance preamp input.
   * **`B.Cu` (Bottom Layer):** **100% continuous, unbroken `GND` copper pour** acting as an electromagnetic shield underneath both the AFE and the Nano R4.
-* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, SMD `PJ-320A` jack, and headerless castellated **Arduino Nano R4 `ABX00142`**) — easy to hand-solder or order via turnkey PCBA.
+* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, SMD `PJ-320A` jack, side-actuated `SW1` slide switch, and headerless castellated **Arduino Nano R4 `ABX00142`**) — easy to hand-solder or order via turnkey PCBA.
 
 ![EarScope KiCad 2-Layer Carrier PCB Floorplan](figures/kicad_pcb_floorplan.svg)
 
@@ -52,6 +52,7 @@ Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac
 | `U2` (`U2A, U2B`) | **`U2`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` *(or `LM358`)* | `Package_SO:SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
 | `VSUP` (LDO) | **`U3`** | `MCP1700T-3302E/TT` | `Regulator_Linear:MCP1700x-3302xx_SOT23` | `Package_TO_SOT_SMD:SOT-23` | `C39051` |
 | `VEAR` (Jack) | **`J1`** | `PJ-320A` (3.5mm TRRS) | `Connector_Audio:AudioJack4` | `PJ-320A` SMD 4-pad *(import from EasyEDA/LCSC `C95555`)* | `C95555` |
+| Bias Switch | **`SW1`** | `C&K PCM12SMTR` / `MSK12C02` (`EAR/MIC`) | `Switch:SW_SPDT` | `Button_Switch_SMD:SW_SPDT_PCM12` *(includes 3D STEP model)* | `C221836` |
 | `CIN` | **`C1`** | `68 nF` (`C0G/NP0` or `X7R`, `≥25V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1589` / `C0G` |
 | `C1` (`CF` in doc) | **`C2`** | `1 nF` (`C0G/NP0`, `50V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1706` |
 | `C1H, C2H` | **`C3, C4`** | `1 µF` (`X7R`, `≥16V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C28323` |
@@ -69,8 +70,8 @@ Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac
 | `RBH` | **`R8`** | `45.3 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C138044` |
 | `R1L, R2L` | **`R9, R10`** | `24.9 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C25962` |
 | `ROUT` | **`R11`** | `100 Ω` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17408` |
-| `RMIC` | **`R12`** | `2.2 kΩ` (`1%`, electret bias) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17520` |
-| Bias / Jack Jumpers | **`JP1–JP3`** | Flat SMD Solder Jumpers | `Jumper:SolderJumper_2_Open` / `_Bridged` | `Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm` | Copper Only |
+| `RMIC` | **`R12`** | `2.2 kΩ` (`1%`, switched via `SW1`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17520` |
+| TRRS Sleeve Jumpers | **`JP2, JP3`** | Flat SMD Solder Jumpers *(4-pole CTIA opt.)* | `Jumper:SolderJumper_2_Bridged` / `_3_Bridged12` | `Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm` | Copper Only |
 | Scope Test Pads | **`TP1–TP6`** | `1.2 mm` Flat SMD Test Points | `Connector:TestPoint` | `TestPoint:TestPoint_Pad_D1.2mm` | Copper Only |
 
 ---
@@ -127,22 +128,25 @@ The **Arduino Nano R4 (`ABX00142`)** has a flat underside and castellated half-h
 
 ---
 
-### 4.4 Universal `PJ-320A` (`J1`) TRRS Wiring (Supports Both 3-Pole TRS & 4-Pole CTIA Headsets!)
+### 4.4 External `SW1` (`EAR ↔ MIC`) Slide Switch & Universal `PJ-320A` (`J1`) Wiring
 
-A common pitfall with `3.5 mm` TRRS jacks (`PJ-320A`) is that **4-pole smartphone headsets (CTIA standard)** place `GND` on **Ring 2** and the inline microphone on **Sleeve**, whereas **3-pole TRS earphones** have a long ground sleeve bridging **Ring 2 + Sleeve**:
+To switch effortlessly between **Passive Earphones** (*Speaker-as-Mic*, zero DC bias) and **Electret Microphones** (`2.2 kΩ` DC bias to `3.30 V`) from outside the enclosure without opening the case or touching a soldering iron, the board integrates an ultraminiature right-angle SMD slide switch (**`SW1`**: `C&K PCM12SMTR` / `MSK12C02`, `6.7 × 2.6 × 1.4 mm`):
 
-* If you tie *only* `Sleeve` to `GND` and leave `Ring 2` floating, **plugging in 4-pole TRRS earbuds leaves the Left Speaker return completely open-circuit!**
-* Wire `J1` (`PJ-320A`) with three tiny zero-height SMD solder jumpers so the board supports **every** 3.5 mm transducer out of the box:
-  1. **`Ring 2` contact** $\rightarrow$ Connect **permanently to `GND`** (works as `GND` for *both* 3-pole TRS earphones and 4-pole CTIA headsets!).
-  2. **`JP2` (`SolderJumper_2_Bridged` from `Sleeve` to `GND`):**
-     * **Default (Bridged):** Ties `Sleeve` + `Ring 2` solidly to `GND` for passive earphone mode.
-     * **Cut Open:** Frees `Sleeve` when using a 4-pole CTIA headset's electret microphone.
-  3. **`JP3` (`SolderJumper_3_Bridged12` Input Selector $\rightarrow$ `VIN_RAW`):**
-     * **Pads 1–2 Bridged (Default):** Connects **`Tip` (Left Earbud Speaker)** to `VIN_RAW`.
-     * **Pads 2–3 Bridged:** Connects **`Sleeve` (4-pole CTIA Electret Mic)** to `VIN_RAW`.
-  4. **`JP1` (`SolderJumper_2_Open` in series with `R12 = 2.2 kΩ` to `VCC_ANA`):**
-     * **Default (Open):** Zero DC bias (safe for `16–32 Ω` passive earphone voice coils).
-     * **Solder-Bridged:** Supplies `3.30 V` through `2.2 kΩ` to `VIN_RAW` ahead of `C1` (`68 nF`) for electret capsules.
+1. **Built-In KiCad Symbol & Footprint (Zero Custom Library Required):**
+   * **Symbol:** `Switch:SW_SPDT` (`Pin 1 = A`, `Pin 2 = C [Common]`, `Pin 3 = B`).
+   * **Footprint:** `Button_Switch_SMD:SW_SPDT_PCM12` (ships with a built-in 3D `.step` model for Fusion 360 export; its 4 outer metal shell anchor pads are unnumbered `""`, so `Switch:SW_SPDT` maps with zero ERC/DRC pin mismatches).
+2. **Hum-Free Analog Wiring of `SW1` (Crucial Low-Noise Rule!):**
+   * **Never** route the raw sub-microvolt `VIN_RAW` trace out to an external mechanical switch! Instead, place `SW1` on the **low-impedance `+3.30 V` (`VCC_ANA`) side** of `R12` (`RMIC = 2.2 kΩ`):
+     * **`SW1` Pin 1 (`EAR` / Passive Earphone Position):** Place a KiCad **No-Connect (`X`)** flag. `R12` floats completely open-circuit, ensuring `0.00 mA` DC flows into `16–32 Ω` dynamic earphone coils.
+     * **`SW1` Pin 2 (`Common`):** Connect to Pad 1 of **`R12` (`2.2 kΩ`)**; connect Pad 2 of `R12` to **`VIN_RAW`** (ahead of `C1 = 68 nF`).
+     * **`SW1` Pin 3 (`MIC` / Electret Bias Position):** Connect to **`VCC_ANA` (`+3.300 V`)**. Supplies bias current to the electret capsule's internal JFET while `C1` (`68 nF`) blocks the `~1.6–2.2 V` DC bias from `U1A`.
+     * **Metal Shell Shielding:** In `Pcbnew`, tie `SW1`'s 4 outer mechanical SMD anchor pads to **`GND`** (click a shell pad $\rightarrow$ `E` $\rightarrow$ Net: `GND`) so touching the switch with a finger shunts ESD and `50 Hz` body capacitance straight to the bottom ground plane.
+3. **Universal `PJ-320A` (`J1`) TRRS Wiring (Supports Both 3-Pole TRS & 4-Pole CTIA Headsets):**
+   * **4-pole smartphone headsets (CTIA)** place `GND` on **Ring 2** and inline mic on **Sleeve**, whereas **3-pole TRS plugs** have a long ground sleeve bridging **Ring 2 + Sleeve**. Tying *only* `Sleeve` to `GND` would leave a 4-pole earbud's speaker return open-circuit!
+   * Wire `J1` as follows:
+     1. **`Ring 2` contact** $\rightarrow$ Connect **permanently to `GND`** (works for *both* 3-pole TRS earphones and 4-pole CTIA headsets, plus standard 2/3-pole electret stethoscope mics wired to `Tip + Sleeve`).
+     2. **`JP2` (`SolderJumper_2_Bridged` from `Sleeve` to `GND`):** Default bridged ties `Sleeve` + `Ring 2` to `GND`; cut open only if using a 4-pole CTIA inline boom mic on `Sleeve`.
+     3. **`JP3` (`SolderJumper_3_Bridged12` $\rightarrow$ `VIN_RAW`):** Default `1–2` bridged connects **`Tip` (Left Earbud / Standard TRS Mic)** to `VIN_RAW`; bridge `2–3` only to pick up `Sleeve` on a 4-pole CTIA plug.
 
 *(Before ordering PCBs, always verify the exact `Tip / Ring 1 / Ring 2 / Sleeve` pad numbers of your imported `PJ-320A` footprint against the supplier's mechanical drawing — e.g., LCSC `C95555`).*
 
@@ -176,9 +180,10 @@ A common pitfall with `3.5 mm` TRRS jacks (`PJ-320A`) is that **4-pole smartphon
    * Place **`U3` (`MCP1700-3.3V` LDO)** + `C9` (`10 µF`) + `C10` (`10 µF`) at the bottom (`Y ≈ 14.5 mm`), immediately adjacent to Nano R4's `+5V` (Pin 27) and `GND` (Pin 29) pads.
    * Place the **`VREF` divider (`R5, R6 = 100 kΩ`, `C8 = 10 µF`)** in the upper barrier (`Y ≈ 5.5 mm`).
 3. **Right Quiet Analog Island (`X = 49.5 .. 68.0 mm`):**
-   * Place **`J1` (`PJ-320A`)** centered vertically (`Y = 10.0 mm`) on the right edge (`X = 68.0 mm`), with its `Ø5.0 × 2.0 mm` cylindrical front collar overhanging `X = 68.0 .. 70.0 mm`.
-   * Place **`U1` (`OPA2365`: Preamp + HPF)** in the lower-left of the analog island (`X ≈ 52.5 mm, Y ≈ 15.0 mm`), close to `J1`'s input pad, with bypass cap **`C11` (`100 nF`) `< 1.5 mm` from `U1` Pin 8**.
-   * Place **`U2` (`OPA2365`: LPF + `VREF` Buffer)** in the upper-left of the analog island (`X ≈ 52.5 mm, Y ≈ 4.8 mm`), with bypass cap **`C12` (`100 nF`) `< 1.5 mm` from `U2` Pin 8**.
+   * Place **`J1` (`PJ-320A`)** slightly above vertical center (`Y ≈ 9.1 mm`) on the right edge (`X = 68.0 mm`), with its `Ø5.0 × 2.0 mm` cylindrical front collar overhanging `X = 68.0 .. 70.0 mm`. This leaves generous clearance along the South edge directly below `J1` for `SW1`.
+   * Place **`SW1` (`SW_SPDT_PCM12` — `EAR / MIC` Slide Switch)** along the **South edge (`X ≈ 61.6 mm` center, spanning `X = 58.3 .. 65.0 mm`, `Y ≈ 18.5 mm`)**, clearing the `2.5 × 2.5 mm` bottom-right snap-fit corner keepout (`X = 65.5 .. 68.0 mm`). Orient `SW1` so its side actuator knob overhangs the `Y = 20.0 mm` South `Edge.Cuts` line by **`~1.3 mm`**, protruding through a `4.2 × 1.8 mm` side slot in the 3D-printed enclosure wall. Add silkscreen labels `EAR` (left) and `MIC` (right) on `F.Silkscreen`.
+   * Place **`U1` (`OPA2365`: Preamp + HPF)** in the lower-left of the analog island (`X ≈ 52.2 mm, Y ≈ 14.8 mm`), close to `J1` and `R12`, with bypass cap **`C11` (`100 nF`) `< 1.5 mm` from `U1` Pin 8**.
+   * Place **`U2` (`OPA2365`: LPF + `VREF` Buffer)** in the upper-left of the analog island (`X ≈ 52.2 mm, Y ≈ 4.6 mm`), with bypass cap **`C12` (`100 nF`) `< 1.5 mm` from `U2` Pin 8**.
    * Place **`C7` (`COUT = 100 nF`)** and **`C13` (`CAREF = 100 nF`)** **within `2.0 mm` of Nano R4's `A1` (Pin 20) and `AREF` (Pin 18) pads**, respectively, each with an immediate `GND` via straight down to `B.Cu`.
 
 ### 6.3 Drawing the Active `VREF` Guard Ring Around `IN_POS`

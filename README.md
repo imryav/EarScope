@@ -13,13 +13,13 @@
 
 EarScope converts microscopic tympanic/ear-canal pressure oscillations (`5 Hz – 45 Hz`) into a high-resolution digital stream over **USB-C**:
 
-* **Sensor Input (`3.5 mm` AUX — `PJ-320A`):** Supports standard passive dynamic earphones (`16–32 Ω` voice coil operating in reverse as a zero-bias acoustic transducer via the ear-canal occlusion effect) as well as electret microphone capsules (via optional SMD solder jumper `JP_BIAS`).
+* **Sensor Input (`3.5 mm` AUX `PJ-320A` + External `SW1` Slide Switch):** Supports standard passive dynamic earphones (`16–32 Ω` voice coil operating in reverse as a zero-bias acoustic transducer via the ear-canal occlusion effect) **and** electret microphone capsules at the flick of an external side slide switch (**`SW1: EAR ↔ MIC`**, toggling `2.2 kΩ` DC bias on `VCC_ANA`).
 * **Cardiac Analog Front-End (`OPA2365` × 2):** Dual ultra-low-noise (`4.5 nV/√Hz`), rail-to-rail CMOS operational amplifiers configured as a breathing-protected `53.2 dB` preamplifier followed by a 4th-order Butterworth `5 Hz – 45 Hz` bandpass filter (`-60 dB/decade` sub-cardiac slope including input coupling).
 * **Ratiometric `3.30 V` Analog Island (`VCC_ANA` = `AREF`):** A dedicated low-noise LDO (`MCP1700T-3302E/TT`) steps the noisy USB `+5 V` rail down to a quiet **`3.300 V`** supply powering both `OPA2365` ICs, the symmetric **`1.650 V`** virtual-ground buffer, **and** the external ADC reference pin (**`AREF`**) of the **Arduino Nano R4**.
 * **Digital Acquisition & Streaming (`Arduino Nano R4` / `ABX00142`):** Powered by the **Renesas `RA4M1`** (`48 MHz` Arm Cortex-M4F with FPU), sampling at `500 Hz` with a **true 14-bit SAR ADC** (`0–16,383` counts, `1 LSB = 201.4 µV`) and zero Wi-Fi/BLE RF burst interference, streaming real-time packets over onboard **USB-C** to Python DSP & deep-learning waveform reconstruction software.
 
 ```text
-[Earphones (3.5mm AUX)] ---> [Cardiac AFE (OPA2365, 5–45Hz, 3.30V LDO)] ---> [Arduino Nano R4 14-Bit ADC (Pin A1, AREF=3.30V)] ===(USB-C @ 500Hz)===> [PC / Python UI]
+[Earphones / Mic (3.5mm AUX + SW1)] ---> [Cardiac AFE (OPA2365, 5–45Hz, 3.30V LDO)] ---> [Arduino Nano R4 14-Bit ADC (Pin A1, AREF=3.30V)] ===(USB-C @ 500Hz)===> [PC / Python UI]
 ```
 
 ---
@@ -48,14 +48,14 @@ $$
 V_{\text{REF}} = V_{\text{CC\_ANA}} \cdot \frac{R_{\text{REF2}}}{R_{\text{REF1}} + R_{\text{REF2}}} = 3.300\text{ V} \cdot \frac{100\text{ k}\Omega}{100\text{ k}\Omega + 100\text{ k}\Omega} = 1.650\text{ V} \quad (\text{14-bit ADC Code } 8192)
 $$
 
-### 3.2 Input Coupling & Breathing Motion Pre-Filter (`C_IN = 68 nF`)
+### 3.2 Input Coupling, Breathing Motion Pre-Filter (`C_IN = 68 nF`) & `SW1` (`EAR ↔ MIC`) Switch
 In occluded ear canals, slow respiratory pressure waves (`0.2 – 0.4 Hz`) reach **`~5 mV` peak** — more than `15×` stronger than in-ear cardiac `S1/S2` pulses. Setting $C_{\text{IN}} = 68\text{ nF}$ against $R_{\text{BIAS}} = 1\text{ M}\Omega$ creates a passive high-pass corner ahead of Stage 1:
 
 $$
 f_{c,\text{in}} = \frac{1}{2\pi R_{\text{BIAS}} C_{\text{IN}}} = \frac{1}{2\pi \cdot 1\text{ M}\Omega \cdot 68\text{ nF}} \approx 2.34\text{ Hz}
 $$
 
-This pre-attenuates `0.25 Hz` breathing artifacts by **`8×` (`-18.0 dB`) *before* preamplification**, completely preventing Stage 1 rail saturation while incurring `< 0.07 dB` loss at `18 Hz`. An optional `R_MIC = 2.2 kΩ` pull-up to `VCC_ANA` ahead of `C_IN` (enabled via flat SMD jumper `JP_BIAS`) supports electret capsules.
+This pre-attenuates `0.25 Hz` breathing artifacts by **`8×` (`-18.0 dB`) *before* preamplification**, completely preventing Stage 1 rail saturation while incurring `< 0.07 dB` loss at `18 Hz`. Ahead of $C_{\text{IN}}$, an external side-actuated SMD slide switch (**`SW1`**, `C&K PCM12SMTR` / `MSK12C02`) switches **`R_MIC = 2.2 kΩ`** to `VCC_ANA` ON for electret microphone capsules (`MIC` position) or completely disconnects it (`EAR` position) so zero DC current flows through `16–32 Ω` passive earphone voice coils. Because `SW1` sits on the low-impedance `VCC_ANA` side of `R_MIC` with a grounded metal shell, touching the switch introduces zero `50 Hz` finger hum.
 
 ### 3.3 Stage 1 Low-Noise Non-Inverting Preamplifier (`U1A`)
 Selected production gain uses **$R_G = 220\text{ }\Omega$** with $R_F = 100\text{ k}\Omega$ in parallel with **$C_F = 1\text{ nF}$**:
@@ -145,6 +145,7 @@ All passive components use **`0805` SMD** packages for straightforward hand sold
 | **U1, U2** | `OPA2365AIDR` | SOIC-8 | 2 | Dual `4.5 nV/√Hz`, zero-crossover rail-to-rail CMOS op-amp |
 | **U3** | `MCP1700T-3302E/TT` | SOT-23-3 | 1 | Low-noise `3.30 V` LDO powering `VCC_ANA` + Nano R4 `AREF` |
 | **J1** | `PJ-320A` (3.5 mm TRRS) | SMD (`12.1 × 6.1 × 5.0 mm`) | 1 | Earphone / headset AUX input receptacle |
+| **SW1** | `C&K PCM12SMTR` / `MSK12C02` | `Button_Switch_SMD:SW_SPDT_PCM12` (`6.7×2.6 mm`) | 1 | External side slide switch (`EAR` = Bias OFF, `MIC` = `2.2 kΩ` Bias ON) |
 | **C_IN** | `68 nF` | 0805 (`C0G/NP0` or `X7R`, `≥25 V`) | 1 | `2.34 Hz` breathing pre-filter (`C0G` preferred to eliminate piezo microphonics) |
 | **C_F** | `1 nF` | 0805 (`C0G/NP0`) | 1 | Stage 1 feedback HF/EMI roll-off (`1.59 kHz`) across `R_F` |
 | **C_1H, C_2H** | `1 µF` | 0805 (`X7R`, `≥16 V`) | 2 | Stage 2 `5 Hz` Sallen-Key HPF capacitors |
@@ -158,7 +159,7 @@ All passive components use **`0805` SMD** packages for straightforward hand sold
 | **R_AH, R_BH** | `22.6 kΩ`, `45.3 kΩ` (`1%`) | 0805 | 1 ea | Stage 2 `5 Hz` Butterworth Sallen-Key HPF resistors |
 | **R_1L, R_2L** | `24.9 kΩ` (`1%`) | 0805 | 2 | Stage 3 `45 Hz` Butterworth Sallen-Key LPF resistors |
 | **R_OUT** | `100 Ω` (`1%`) | 0805 | 1 | Isolates `U2A` output from `C_OUT` SAR charge reservoir |
-| **R_MIC + JP_BIAS** | `2.2 kΩ` + `SolderJumper_2_Open` | 0805 + SMD Jumper | 1 | Open = passive earphone (default); Bridged = electret mic bias |
+| **R_MIC** | `2.2 kΩ` (`1%`) | 0805 | 1 | Electret capsule bias pull-up in series with `SW1` (`VCC_ANA` side) |
 
 ---
 
