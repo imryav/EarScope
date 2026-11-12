@@ -1,144 +1,149 @@
-# מדריך צעד-אחר-צעד: עדכון ואימות סימולציית LTspice עבור EarScope (ESP32-C3 SuperMini)
+# LTspice Finalization, Verification & Simulation Results (Arduino Nano R4 Target)
 
-מדריך זה מפרט כיצד לעדכן את קובץ הסימולציה ב-**LTspice** (`cardiac_afe.asc`) מהתכנון ההתחלתי של $5\text{V}$ אל התכנון הסופי המדויק שנייצר ב-PCB עבור הבקר **`ESP32-C3 SuperMini`** (ראה [readme.md](../readme.md)).
+This document details the final production **Analog Front-End (AFE)** schematic (`AFE_Cardiac_5-45Hz.asc`), step-by-step LTspice verification procedure, and validated simulation results tailored for the **Arduino Nano R4 (`ABX00142`, Renesas `RA4M1`)**.
 
 ---
 
-## 1. סיכום השינויים שנבצע בסכמת ה-LTspice
+## 1. Why Arduino Nano R4 Optimizes the Analog Interface
 
-| נושא בסימולציה | מצב קודם (תכנון ראשוני) | מצב מעודכן (מותאם ל-PCB ול-ESP32-C3) | למה זה קריטי? |
+Migrating the digital acquisition stage to the **Arduino Nano R4** unlocks major analog signal-integrity advantages over Wi-Fi/BLE microcontrollers when paired with a ratiometric analog supply:
+
+1. **True 14-Bit SAR ADC (`0` to `16,383` counts):** Calling `analogReadResolution(14)` provides 4× finer quantization than a 12-bit ADC, with zero `2.4 GHz` Wi-Fi/BLE transmit bursts coupling into the microvolt preamp.
+2. **External Precision ADC Reference (`AREF` / `VREFH0`):** On the Nano R4, USB-C `VBUS` passes through an onboard Schottky diode (`PMEG6020AELRX`), leaving `+5V` at `~4.65 V – 4.95 V` with laptop switching ripple. However, **JP1 Pin 3 (`AREF`)** connects directly to the Renesas `RA4M1` `VREFH0` reference input (`analogReference(AR_EXTERNAL)`).
+3. **Ratiometric `3.30 V` Analog Island (`VCC_ANA` = `AREF`):**
+   * A dedicated ultra-low-noise linear regulator (`MCP1700T-3302E/TT` or `LP2985-33DBVR`) steps the Nano R4 `+5V` pin down to a clean **`VCC_ANA = 3.300 V`** analog rail.
+   * `VCC_ANA` simultaneously powers **both** `OPA2365` dual op-amps, the `100 kΩ / 100 kΩ` virtual-ground divider, **and** the Nano R4 `AREF` pin.
+   * **Result:** Full-scale 14-bit ADC span is locked to `0.000 V – 3.300 V` (**`1 LSB = 201.4 µV`**), quiescent DC output sits dead-center at **`V_REF = 1.650 V` (ADC code `8192`)**, and `OPA2365` enjoys a symmetric **`±1.60 V` (`3.20 Vpp`)** linear output swing.
+
+---
+
+## 2. Summary of Final Schematic Modifications (`Initial Draft` $\rightarrow$ `AFE_Cardiac_5-45Hz.asc`)
+
+| Circuit Block | Initial LTspice Draft | Final Production Schematic | Engineering Rationale |
 | :--- | :--- | :--- | :--- |
-| **מתח הזנה אנלוגי (`VCC_ANA`)** | $5.0\text{V}$ ישיר מ-USB | **$3.3\text{V}$** (יציאת LDO שקט `MCP1700`) | הגנה על הבקר והפרדת רעשי ה-USB מהמגברים |
-| **מחלק מתח ייחוס (`VREF`)** | $100\text{k}\Omega / 100\text{k}\Omega \rightarrow 2.50\text{V}$ | **$R_{\text{REF1}}=165\text{k}\Omega, R_{\text{REF2}}=100\text{k}\Omega \rightarrow 1.245\text{V}$** | תחום ה-`ADC1` המכויל ב-`ESP32-C3` הוא **$0\text{V}-2.50\text{V}$ בלבד**! מרכוז סביב $1.25\text{V}$ מונע קיטום אסימטרי |
-| **קבל LPF שני (`CBL`)** | מחובר ל-`GND` (`0`) | מחובר לרשת **`VREF`** | מונע זליגות והשהיית טעינה מול נקודת העבודה בהדלקה |
-| **הגבר קדם-מגבר (`RG`)** | קבוע על $1\text{k}\Omega$ ($\times 101$) | פרמטרי **`{RG_VAL}`** עם סריקת `100` ו-`1k` | בדיקת יציבות ואי-רוויה גם ב-$40\text{dB}$ וגם ב-$60\text{dB}$ |
-| **מוצא המגבר לכניסת ה-ADC** | מוצא `U2A` פתוח ללא עומס | הוספת מסנן **`R_OUT=220Ω` + `C_OUT=47nF`** | וידוא יציבות המגבר מול קבל מאגר המטען של ה-SAR ADC |
-| **אופציית מיקרופון אלקטרט** | לא קיימת | אופציונלי: `R_MIC=2.2kΩ` מ-`VCC_ANA` לפני `C_IN` | אימות שמתח ה-Bias חסום לחלוטין על ידי `C_IN` ואינו מזיז את ה-DC |
+| **Analog Supply (`VCC_ANA`)** | `5.0 V` ideal source | **`3.30 V`** regulated rail + `100 nF` (`ESR = 20 mΩ`) per IC | Matches the dedicated `3.3 V` LDO and Nano R4 `AREF` full-scale voltage |
+| **Virtual Ground (`U2B`)** | `100 kΩ / 100 kΩ` at `5 V` (`2.50 V`) | **`R_REF1 = 100 kΩ`, `R_REF2 = 100 kΩ` at `3.3 V` (`1.650 V`)** + `C_REF = 10 µF` on `U2B+` | Centers quiescent output at `AREF / 2` (`1.650 V` = code `8192`) with `0.32 Hz` noise filtering |
+| **Input Coupling & Bias** | `C_IN = 1 µF`, passive only | **`C_IN = 68 nF`** ($f_c \approx 2.34\text{ Hz}$ with `R_BIAS = 1 MΩ`) + optional `R_MIC = 2.2 kΩ` to `VCC_ANA` ahead of `C_IN` | **Attenuates `< 0.5 Hz` breathing motion artifacts (`8×` at `0.25 Hz`) *before* Stage 1 amplification to prevent preamp rail saturation**, while supporting both passive earphones (`16–32 Ω`) and electret capsules |
+| **Stage 1 Preamp (`U1A`)** | Fixed `R_G = 1 kΩ` (`×101`), no HF cap | **Selected `R_G = 220 Ω`** (`×455.5` / `53.2 dB`; sweepable via `{RG_VAL}`) + **`C_F = 1 nF`** across `R_F = 100 kΩ` | **Balances high SNR for passive earphones with wide linear headroom for electret mics, and rolls off RF/EMI pickup above `1.59 kHz`** |
+| **Stage 2 HPF (`U1B`)** | `5 Hz` Sallen-Key HPF | Verified Butterworth placement (`C_1H = C_2H = 1 µF`, `R_AH = 22.6 kΩ` to output, `R_BH = 45.3 kΩ` to `VREF`) | Strips Stage 1 amplified DC offset (`V_OS × 455.5`) and combines with `C_IN` for `-60 dB/decade` breathing rejection |
+| **Stage 3 LPF (`U2A`)** | `C_BL = 100 nF` tied to `GND` | **`C_BL = 100 nF` tied to `VREF`** (`R_1L = R_2L = 24.9 kΩ`, `C_AL = 200 nF`) | Eliminates asymmetric power-up charging currents and ground-bounce coupling |
+| **Stage 4 ADC Driver** | Unloaded `U2A` output | **`R_OUT = 100 Ω` + `C_OUT = 100 nF` to `GND`** (`f_c = 15.9 kHz`) | Isolates `OPA2365` from capacitive load and acts as a charge reservoir keeping 14-bit SAR kickback `< 0.35 LSB` |
 
 ---
 
-## 2. שלבי העריכה בתוך LTspice (צעד-אחר-צעד)
+## 3. Complete Signal-Chain Topology & Net Naming
 
-פתח את קובץ הסכמה שלך ב-LTspice ובצע את השלבים הבאים לפי הסדר:
-
-### שלב 1: הורדת מקור המתח האנלוגי ל-$3.3\text{V}$ (ובדיקת PSRR אופציונלית)
-1. אתר את מקור המתח הראשי שמזין את רגלי ה-`V+` של מגברי השרת `U1` ו-`U2` (`OPA2365`) ואת מחלק המתח.
-2. לחץ קליק ימני על מקור המתח ושנה את ערך ה-DC שלו מ-`5` ל-**`3.3`**.
-3. שנה את שם הרשת (`Net Name` – מקש **`F4`**) של קו ההזנה הזה ל-**`VCC_ANA`**.
-4. **הוספת קבלי Decoupling מציאותיים:** הוסף שני קבלים של `100n` (`C_DEC1`, `C_DEC2`) בין `VCC_ANA` ל-`GND` בסמוך למגברים (קליק ימני על הקבל -> הזן `Series Resistance = 0.02` לדימוי ESR אמיתי של קבל `0805 X7R`).
-
-> **טיפ לבדיקת דחיית רעשי ספק (PSRR):** אם תרצה לבדוק שהמעגל חסין לשאריות אדווה מה-LDO, לחץ קליק ימני על מקור `VCC_ANA` -> לחץ **Advanced** -> בחר `SINE(3.3 0.005 100k)` (אדווה של $5\text{mV}$ בתדר $100\text{kHz}$ על גבי $3.3\text{V}$). החזר ל-`3.3` רגיל לבדיקות AC/Noise.
-
----
-
-### שלב 2: כיול האדמה הווירטואלית (`U2B`) ל-$1.25\text{V}$ עבור ה-`ESP32-C3`
-בבקר ה-`ESP32-C3 SuperMini`, ממיר ה-`ADC1` (`GPIO0–GPIO4` בניחות `ADC_ATTEN_DB_12`) מודד מתחים בטווח **$0\text{V}$ עד $2.50\text{V}$** (מעל $2.50\text{V}$ הממיר נכנס לרוויה על הערך הדיגיטלי `4095`).
-
-1. אתר את מחלק המתח שמזין את כניסת ה-`+` של החוצץ `U2B` (`R_REF1` העליון אל `VCC_ANA`, ו-`R_REF2` התחתון אל `GND`).
-2. לחץ קליק ימני על הנגד העליון **`R_REF1`** ושנה את ערכו מ-`100k` ל-**`165k`** (השאר את **`R_REF2`** על **`100k`** ואת הקבל המקבילי **`C_REF`** על **`10u`**).
-   * *הערה:* אם ב-PCB תעדיף להשתמש בנגד נפוץ מסדרת E24 של **`150k`**, ניתן להזין `150k` ולקבל $V_{\text{REF}} = 1.32\text{V}$ שעדיין משאיר מרווח נקי של $\pm 1.18\text{V}$.
-3. לחץ על **`F4` (Label Net)**, הקלד **`VREF`**, וחבר את התווית **למוצא (Output) של מגבר החוצץ `U2B`** (אסור לחבר מעגלים ישירות לנקודת האמצע שבין הנגדים!).
-4. ודא שכניסת ה-`-` של `U2B` מחוברת ישירות למוצא של `U2B` (חיבור Follower בהגבר יחידה).
-
----
-
-### שלב 3: תיקון חיבור הקבל `C_BL` בשלב ה-LPF (`U2A`)
-1. עבור לשלב 3 בסכמה – מסנן מעביר הנמוכים Sallen-Key ב-$45\text{Hz}$ סביב `U2A` (`R1L = 24.9k`, `R2L = 24.9k`, `CAL = 200n`, `CBL = 100n`).
-2. אתר את הקבל **`CBL`** ($100\text{nF}$) שמחובר בין כניסת ה-`+` של `U2A` לבין האדמה (`GND`).
-3. לחץ על כלי המספריים (**Delete – `F5`**) ומחק את סמל משולש האדמה (`GND`) מתחתית הקבל `CBL`.
-4. לחץ על **`F4` (Label Net)**, בחר בתווית **`VREF`**, וחבר אותה לרגל התחתונה של `CBL` (לחץ `F3` להשלמת חוט קצר במידת הצורך).
-5. **בדיקה משולשת של כל נקודות הייחוס במעגל:** ודא שכל ארבע הנקודות הבאות מחוברות לתווית **`VREF`** (ולא ל-`GND`!):
-   * הרגל התחתונה של `R_BIAS` ($1\text{M}\Omega$) בכניסת שלב 1 (`U1A+`).
-   * הרגל התחתונה של `RG` בשלב 1 (`U1A-`).
-   * הרגל התחתונה של `RBH` ($45.3\text{k}\Omega$) במסנן ה-HPF בשלב 2 (`U1B+`).
-   * הרגל התחתונה של `CBL` ($100\text{nF}$) במסנן ה-LPF בשלב 3 (`U2A+`).
-
----
-
-### שלב 4: הפיכת ההגבר לפרמטרי (`{RG_VAL}`) כדי לבדוק $\times 101$ ו-$\times 1001$ יחד
-כדי לראות על אותו גרף איך המעגל מתנהג גם עם אוזנייה רגישה ($\times 101 \approx 40\text{dB}$) וגם עם אוזנייה חלשה ($\times 1001 \approx 60\text{dB}$):
-
-1. לחץ קליק ימני על הנגד **`RG`** בשלב הקדם-מגבר (`U1A`) ובמקום מספר קבוע הקלד בסוגריים מסולסלים: **`{RG_VAL}`**.
-2. לחץ על מקש **`S`** (הוספת **SPICE Directive**), הקלד את השורה הבאה והנח אותה בפינת הסכמה:
-   ```spice
-   .step param RG_VAL list 1k 100
-   ```
-   *(בעת בדיקה בודדת שבה תרצה רק גרף אחד, תוכל להחליף זמנית ב-`.param RG_VAL=1k` או `.param RG_VAL=100`).*
-
-> **אזהרה הנדסית חשובה לגבי מודל המגבר ב-`RG = 100Ω`:**
-> מאחר ש-`RG` מחובר ישירות ל-`VREF` גם ב-DC, מתח ההיסט הפנימי של המגבר ($V_{\text{OS}}$) מוכפל פי $1001$ במוצא `U1A`! בשבב **`OPA2365`** האמיתי ($V_{\text{OS,typ}} = 100\mu\text{V}$) התזוזה היא כ-$0.1\text{V}$ בלבד (ונחסמת מיד על ידי הקבלים `C1H, C2H` של שלב 2 כך שמוצא המעגל נשאר יציב על $1.245\text{V}$). לעומת זאת, אם תחליף אי-פעם למגבר זול כמו `LM358` ($V_{\text{OS}} \approx 3\text{mV}$), שלב 1 ייכנס לרוויה ב-DC! לכן חשוב להריץ את הסימולציה עם קובץ המודל הרשמי `OPA2365.lib` של Texas Instruments ולא עם מגבר אידיאלי.
-
----
-
-### שלב 5: הוספת מסנן היציאה ועומס ה-ADC של ה-`ESP32-C3`
-1. במוצא המגבר האחרון (`U2A`), הוסף תווית רשת (`F4`) בשם `OUT_LPF`.
-2. חבר בטור מ-`OUT_LPF` נגד חדש **`R_OUT`** בערך **`220`**.
-3. מהצד השני של `R_OUT` חבר קבל חדש **`C_OUT`** בערך **`47n`** אל **`GND`** (כאן הקבל כן מתחבר ל-`GND` האמיתי של ה-ESP32-C3 כדי לשמש מאגר מטען ל-SAR ADC!).
-4. תן לצומת שמעל `C_OUT` תווית רשת (`F4`) בשם **`ADC_IN`** – זו הנקודה המדויקת שדוגם פין `GPIO3` ב-`ESP32-C3 SuperMini`!
-
----
-
-### שלב 6: בניית מקור אות אוזנייה מציאותי (אות לב + נשימה + הפרעת חשמל $50\text{Hz}$)
-במקום גל סינוס נקי שלא בודק את המסננים, מומלץ לחבר בכניסה (לפני הקבל `C_IN = 1u`) מודל של אוזנייה (`R_EAR = 32Ω` בטור) עם שלושה מקורות מתח מחוברים בטור (או מקור Behavioral `BV` אחד):
-
-1. שים רכיב **`bv`** (` Arbitrary Behavioral Voltage Source`, לחץ `F2` והקלד `bv`) שמחובר מ-`GND`, בטור לנגד `R_EAR = 32` שנכנס אל `C_IN`.
-2. לחץ קליק ימני על `B1` ובשדה `Value` הדבק את הנוסחה הבאה (המדמה בו-זמנית תזוזת נשימה חזקה ב-$0.3\text{Hz}$, גל לב בתדר $20\text{Hz}$, והפרעת רשת חשמל של $50\text{Hz}$):
-   ```spice
-   V = 5m*sin(2*pi*0.3*time) + 0.3m*sin(2*pi*20*time) + 0.5m*sin(2*pi*50*time)
-   ```
-3. לבדיקת תגובת תדר (`.ac`) ורעש (`.noise`), עדיף להשתמש במקור מתח רגיל (`voltage`, מקש `F2`) עם `Series Resistance = 32` וערך **`AC 1`** (ובלשונית Transient: `SINE(0 0.5m 20)`).
-
----
-
-## 3. ארבע בדיקות האימות (Checklist) לפני מעבר לעריכת ה-PCB
-
-הרץ כל אחת מארבע הפקודות הבאות ב-LTspice (`Simulate -> Edit Simulation Cmd`) וודא שהמעגל עובר את כל הקריטריונים:
-
-### בדיקה 1: נקודת עבודה בזרם ישר (`.op`)
-הזן פקודת סימולציה:
-```spice
-.op
+```mermaid
+flowchart LR
+    EAR["Earphone / Mic Source (PJ-320A)"] --> VIN_RAW["VIN_RAW (+ opt. R_MIC 2.2k to VCC_ANA)"]
+    VIN_RAW -->|"C_IN (68nF) + R_BIAS (1MΩ to VREF)"| U1A["Stage 1: Preamp U1A (R_G = 220Ω → ×455.5, C_F = 1nF)"]
+    U1A --> OUT_PRE["OUT_PRE"]
+    OUT_PRE -->|"C1H=1µF, C2H=1µF, RAH=22.6k, RBH=45.3k"| U1B["Stage 2: 5Hz Sallen-Key HPF (U1B)"]
+    U1B --> OUT_HPF["OUT_HPF"]
+    OUT_HPF -->|"R1L=24.9k, R2L=24.9k, CAL=200nF, CBL=100nF (to VREF)"| U2A["Stage 3: 45Hz Sallen-Key LPF (U2A)"]
+    U2A --> OUT_LPF["OUT_LPF"]
+    OUT_LPF -->|"R_OUT (100Ω) + C_OUT (100nF to GND)"| ADC_IN["ADC_IN (Nano R4 Pin A1)"]
 ```
-**מה בודקים בחלון התוצאות (עבור `RG_VAL = 1k`):**
-* `V(vcc_ana)` = **`3.300 V`**
-* `V(vref)` $\approx$ **`1.245 V`** (אם בחרת `R_REF1 = 165k`) או **`1.320 V`** (אם בחרת `150k`)
-* `V(adc_in)` $\approx$ **`1.245 V`** (חייב להיות זהה ל-`V(vref)` עד כדי מילי-וולטים בודדים!)
 
 ---
 
-### בדיקה 2: עקומת היענות תדר – Bode Plot (`.ac`)
-ודא שמקור הכניסה מוגדר כ-`AC 1`, והזן פקודת סימולציה:
-```spice
-.ac dec 100 0.1 100k
-```
-לחץ עם הפרוב על הצומת **`ADC_IN`** ובדוק:
-* **הגבר בפס המעבר (סביב $15\text{Hz} - 25\text{Hz}$):** שני קווים שטוחים וחלקים – הקו התחתון על **`~40 dB`** (`RG=1k`) והקו העליון על **`~60 dB`** (`RG=100`).
-* **תדרי קיטעון ($-3\text{dB}$):** ירידה של $3\text{dB}$ מהשיא בדיוק סביב **`5 Hz`** משמאל וסביב **`45 Hz`** מימין.
-* **חוסר הגבר-יתר (No Peaking / Ringing):** ודא שאין "גבעה" חדה ב-$5\text{Hz}$, ב-$45\text{Hz}$ או ב-$15\text{kHz}$ (מוכיח שהוספת `R_OUT=220Ω` + `C_OUT=47nF` שומרת על יציבות מלאה של `OPA2365`).
-* **ניחות נשימה ($0.3\text{Hz}$):** הנחתה של כ-$-48\text{dB}$ ביחס לפס המעבר!
+## 4. Step-by-Step LTspice Implementation Guide
+
+### Step 1: Import the Real `OPA2365` SPICE Model
+An ideal op-amp hides DC input offset voltage ($V_{\text{OS}}$), output rail saturation, and capacitive-load phase margin behavior.
+
+1. Place Texas Instruments' `OPA2365.lib` (or `OPA365.lib`) in the same directory as `AFE_Cardiac_5-45Hz.asc` and include `.lib OPA2365.lib`.
+2. Connect `V-` of all op-amps (`U1A`, `U1B`, `U2A`, `U2B`) to **`GND` (`0`)** and `V+` to **`VCC_ANA`**.
+
+### Step 2: Configure the `3.30 V` Analog Supply & Decoupling
+1. Set DC supply `V_SUP` between **`VCC_ANA`** and **`GND`** to **`3.3`** (`Series Resistance = 0.05`).
+2. Add local bypass capacitors (`C_LDO_OUT = 10u` with `Rser = 0.01`, plus `C_DEC1 = 100n` and `C_DEC2 = 100n` with `Rser = 0.02`).
+
+### Step 3: Build the `1.650 V` Virtual Ground Buffer (`U2B`)
+1. Connect **`R_REF1 = 100k`** (`VCC_ANA` $\rightarrow$ `VREF_DIV`) and **`R_REF2 = 100k`** (`VREF_DIV` $\rightarrow$ `GND`).
+2. Connect **`C_REF = 10u`** from **`VREF_DIV`** to **`GND`**.
+3. Wire **`VREF_DIV`** to `U2B+`, tie `U2B-` to `U2B` output, and label the output **`VREF`**.
+
+> [!CAUTION]
+> **Keep `C_REF = 10 µF` strictly on `U2B+` (`VREF_DIV`), never directly on `U2B` output (`VREF`)!**
+> Loading the output of a `50 MHz` unity-gain `OPA2365` directly with bulk capacitance degrades phase margin and induces oscillation.
+
+### Step 4: Input Coupling (`C_IN = 68 nF`), Optional Mic Bias & Stage 1 Preamp (`U1A`)
+1. **Input AC Coupling & Breathing Pre-Filter:**
+   * Connect **`C_IN = 68n`** (`68 nF`) between **`VIN_RAW`** and **`IN_POS`** (`U1A+`).
+   * Connect **`R_BIAS = 1Meg`** between **`IN_POS`** and **`VREF`**.
+   * This sets an input high-pass corner at:
+     $$f_{c,\text{in}} = \frac{1}{2\pi R_{\text{BIAS}} C_{\text{IN}}} = \frac{1}{2\pi \cdot 1\text{ M}\Omega \cdot 68\text{ nF}} \approx 2.34\text{ Hz}$$
+     which attenuates `0.25 Hz` breathing pressure waves by **`8×` (`-18.0 dB`) ahead of `U1A`**, preventing Stage 1 output saturation while attenuating `18 Hz` cardiac energy by `< 0.07 dB`.
+2. **Optional Electret Bias:**
+   * Connect **`R_MIC`** from **`VCC_ANA`** to **`VIN_RAW`** with parameterized value `{RMIC_VAL}` (`.param RMIC_VAL = 1G` for passive dynamic earphones, or `2.2k` for electret capsules).
+3. **Stage 1 Feedback & Selected Production Gain (`R_G = 220 Ω`):**
+   * Connect **`R_F = 100k`** in parallel with **`C_F = 1n`** (`1 nF`, $f_p \approx 1.59\text{ kHz}$) between **`OUT_PRE`** and `U1A-`.
+   * Connect **`R_G`** between `U1A-` and **`VREF`** with nominal value **`220`** (`×455.5` / `53.2 dB`), or `.step param RG_VAL list 1k 220 100` for multi-gain sweeps.
+
+### Step 5: Stage 2 — `5 Hz` 2nd-Order Butterworth Sallen-Key HPF (`U1B`)
+1. Series capacitors: **`C_1H = 1u`** (`OUT_PRE` $\rightarrow$ `HPF_MID`) and **`C_2H = 1u`** (`HPF_MID` $\rightarrow$ `U1B+`).
+2. Feedback resistor: **`R_AH = 22.6k`** (`HPF_MID` $\rightarrow$ `OUT_HPF`).
+3. Shunt resistor: **`R_BH = 45.3k`** (`U1B+` $\rightarrow$ `VREF`).
+4. Unity-gain feedback: `U1B-` tied to **`OUT_HPF`**.
+
+### Step 6: Stage 3 — `45 Hz` 2nd-Order Butterworth Sallen-Key LPF (`U2A`)
+1. Series resistors: **`R_1L = 24.9k`** (`OUT_HPF` $\rightarrow$ `LPF_MID`) and **`R_2L = 24.9k`** (`LPF_MID` $\rightarrow$ `U2A+`).
+2. Feedback capacitor: **`C_AL = 200n`** (`LPF_MID` $\rightarrow$ `OUT_LPF`).
+3. Shunt capacitor: **`C_BL = 100n`** (`U2A+` $\rightarrow$ **`VREF`** — *not* `GND`).
+4. Unity-gain feedback: `U2A-` tied to **`OUT_LPF`**.
+
+### Step 7: Stage 4 — Output Charge-Reservoir Filter (`ADC_IN`)
+1. Connect **`R_OUT = 100`** (`100 Ω`) from **`OUT_LPF`** to **`ADC_IN`** (Arduino Nano R4 Pin `A1`).
+2. Connect **`C_OUT = 100n`** (`100 nF`) from **`ADC_IN`** to **`GND`** (`AVSS0`).
 
 ---
 
-### בדיקה 3: תגובה בזמן והתייצבות בהדלקה (`.tran ... startup`)
-הגדר את מקור הכניסה ל-`SINE(0 0.5m 20)` (אות לב של $500\mu\text{V}$ שיא בתדר $20\text{Hz}$), והזן:
-```spice
-.tran 0 4 0 100u startup
-```
-*(הדגל `startup` מעלה את מקור ה-$3.3\text{V}$ מ-$0\text{V}$ ב-$20\mu\text{s}$ כמו חיבור כבל USB אמיתי!)*
+## 5. Final Simulation Results & Verification Plots
 
-לחץ על **`ADC_IN`** ועל **`VREF`** ובדוק:
-* תוך כ-$1.5 - 2.0$ שניות מרגע החיבור (`C_REF = 10µF` נטען דרך מחלק המתח), `V(ADC_IN)` מתייצב חלק סביב **`1.25V`** ללא תנודות (Oscillations).
-* **בדיקת תחום בטוח ל-`ESP32-C3`:** ודא שכל גל המוצא נע **בתוך החלון הבטוח $0.05\text{V} \le V(\text{ADC\_IN}) \le 2.45\text{V}$**:
-  * עבור `RG = 1k` ($\times 101$) ואות כניסה $0.5\text{mV}$: תנודה של $\pm 50\text{mV}$ סביב $1.25\text{V}$ ($1.20\text{V} - 1.30\text{V}$).
-  * עבור `RG = 100` ($\times 1001$) ואות כניסה $0.5\text{mV}$: תנודה של $\pm 0.50\text{V}$ סביב $1.25\text{V}$ ($0.75\text{V} - 1.75\text{V}$) – נקי לחלוטין מרוויה!
+All verification benchmarks below reflect the finalized production circuit (**`C_IN = 68 nF`**, **`R_G = 220 Ω`**, **`C_F = 1 nF`**, **`VCC_ANA = AREF = 3.300 V`**, **`V_REF = 1.650 V`**).
+
+| Verification Metric | Target Specification | Final Simulated Result (`R_G = 220 Ω`) | Status |
+| :--- | :--- | :--- | :---: |
+| **Quiescent DC Output (`V(ADC_IN)`)** | `1.650 V` (Code `8192`) | **`1.650 V`** (`±0.5 mV`, Stage 1 DC offset stripped by Stage 2 HPF) | PASS |
+| **Net Mid-Band Gain (at `18 Hz`)** | `52 – 54 dB` (`~×450`) | **`52.95 dB` (`×444.3`)** *(sweepable: `39.9 dB` @ `1 kΩ`, `59.8 dB` @ `100 Ω`)* | PASS |
+| **System `-3 dB` Bandwidth** | `~5 Hz – 45 Hz` | **`5.34 Hz – 46.12 Hz`** (zero passband peaking, flat Butterworth top) | PASS |
+| **Preamp Headroom @ `5 mV`, `0.25 Hz` Breathing** | No rail clipping (`[0.05 V, 3.25 V]`) | **`1.408 V – 1.892 V`** (`±0.242 V` around `VREF`; `> 1.38 V` margin to rails) | PASS |
+| **Total `0.25 Hz` Breathing Rejection** | `> 50 dB` rel. to passband | **`-71.2 dB` relative to `18 Hz`** (`3,630×` attenuation, `-60 dB/decade` slope) | PASS |
+| **HF Switching / RF Rejection (`@ 20 kHz`)** | `> 80 dB` rel. to passband | **`-131.8 dB` relative to `18 Hz`** (`-78.9 dB` absolute gain) | PASS |
+| **Power-Up Settling Time (`startup`)** | `< 3.0 s`, zero oscillation | **`~2.3 s`** smooth exponential ramp ($\tau = 0.50\text{ s}$) to `1.650 V` | PASS |
+| **Integrated Passband Noise (`5–45 Hz`)** | `< 1.0 µVrms` input-referred | **`0.141 µVrms`** input-referred (**`63.3 µVrms` = `0.31 LSBrms`** at `ADC_IN`) | PASS |
 
 ---
 
-### בדיקה 4: אנליזת רעש (`.noise`)
-כדי לוודא שרצפת הרעש האנלוגית נמוכה בהרבה מאות האוזנייה הזעיר (עשרות מיקרו-וולטים), קרא למקור הכניסה בשם `V1` והזן:
-```spice
-.noise V(ADC_IN) V1 dec 100 1 1k
-```
-1. הרץ את הסימולציה ולחץ על הצומת **`ADC_IN`** כדי להציג את `V(onoise)` (צפיפות ספקטרלית של רעש במוצא), או הוסף Trace (`Ctrl+A`) של **`V(inoise)`** (רעש מיוחס לכניסה – Input-Referred Noise).
-2. החזק את מקש **`Ctrl`** ולחץ קליק שמאלי על הכותרת `V(inoise)` בראש הגרף כדי ש-LTspice יחשב אינטגרל RMS של הרעש הכולל:
-   * **קריטריון מעבר:** רעש כולל מיוחס לכניסה (`Total RMS Noise`) בתחום $1\text{Hz}-1\text{kHz}$ נמוך מ-**$1.5\,\mu\text{V}_{\text{rms}}$** – מה שמבטיח יחס אות-לרעש (SNR) מצוין אפילו עבור אותות לב חלשים של $20-50\,\mu\text{V}$!
+### 5.1 AC Frequency & Phase Response (`.ac dec 200 0.05 1Meg`)
+
+Combining the `C_IN = 68 nF` input pole ($2.34\text{ Hz}$) with the 2nd-order `5 Hz` Sallen-Key HPF produces a steep **`-60 dB/decade`** sub-cardiac roll-off, while the `45 Hz` Sallen-Key LPF, `C_F = 1 nF` feedback pole ($1.59\text{ kHz}$), and `R_OUT / C_OUT` ADC filter ($15.9\text{ kHz}$) suppress high-frequency audio and switching EMI with zero phase-margin peaking.
+
+![AC Bode Frequency and Phase Response](figures/afe_bode_response.svg)
+
+---
+
+### 5.2 Key Engineering Finding: Preventing Stage 1 Saturation with `C_IN = 68 nF`
+
+In occluded ear canals, slow respiratory pressure waves (`0.2 – 0.4 Hz`) frequently reach **`5 mV` peak** — more than `15×` larger than the `200–350 µVpp` cardiac `S1/S2` signal.
+* With the initial **`C_IN = 1 µF`** ($f_c = 0.16\text{ Hz}$), Stage 1 (`U1A` at `R_G = 220 Ω`) amplifies the `0.25 Hz` breathing wave by `×384` (`±1.92 V`), **slamming `OUT_PRE` into the `3.30 V` and `0.00 V` rails**, erasing cardiac beats during inhalation/exhalation peaks, and injecting severe clipping transients into Stage 2.
+* Reducing **`C_IN` to `68 nF`** ($f_c = 2.34\text{ Hz}$) pre-attenuates `0.25 Hz` artifacts by **`8×` before `U1A`**, keeping `V(OUT_PRE)` comfortably inside **`1.41 V – 1.89 V`** (`100%` linear operation) and preserving clean, uninterrupted `S1/S2` + `SCG` waveforms at `V(ADC_IN)`.
+
+![Stage 1 Preamp Saturation Comparison: C_IN = 1 uF vs C_IN = 68 nF](figures/cin_preamp_saturation_comparison.svg)
+
+---
+
+### 5.3 Power-Up Soft-Start (`0 – 5 s`) & Steady-State Interference Rejection
+
+During USB-C plug-in (`.tran 0 5 0 100u startup`), `C_REF = 10 µF` ramps `V(VREF)` smoothly ($\tau = 0.50\text{ s}$) to `1.650 V` (`ADC code 8192`). Once settled (`t > 2.3 s`), a `~300 µVpp` in-ear cardiac waveform buried inside `5 mV` breathing drift and `450 µV` high-frequency switching noise emerges at `V(ADC_IN)` as a clean **`~135 mVpp` (`~670 LSBpp`)** signal centered at `1.650 V`.
+
+![Transient Startup Settling and Steady-State Cardiac Output](figures/transient_startup_and_cardiac_output.svg)
+
+---
+
+### 5.4 Input-Referred Noise Density & 14-Bit ADC Dynamic Range (`.noise`)
+
+At `R_G = 220 Ω` and `C_IN = 68 nF`, mid-band input-referred noise density at `18 Hz` is **`19.3 nV/√Hz`**, integrating to just **`0.141 µVrms`** across `5–45 Hz`. Referred to `V(ADC_IN)`, total broadband RMS output noise (`0.5 Hz – 1 kHz`) is **`63.3 µVrms`** — equal to **`0.31 LSBrms`** of the Arduino Nano R4 14-bit ADC (`1 LSB = 201.4 µV`), ensuring the system is truly sensor-limited rather than ADC-noise-limited.
+
+![Input-Referred Noise Density and Cumulative RMS Noise](figures/input_referred_noise_spectrum.svg)
