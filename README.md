@@ -2,8 +2,10 @@
 
 **EarScope** is an ultra-low-noise, compact hardware and software acquisition platform that captures acoustic and micro-mechanical cardiac biosignals (**PCG**, **SCG**, and **GCG**) directly from an occluded ear canal using standard wired earphones (`3.5 mm` AUX), inspired by *LubDubDecoder (ACM CHI '26)*.
 
-> **Project Engineering Documentation:**
+> **Project Engineering Documentation & Hardware Files:**
 > * **[LTspice Finalization, Verification & Simulation Results](docs/ltspice_simulation_guide.md)** — Validated `3.30 V` ratiometric schematic ([`AFE_Cardiac_5-45Hz.asc`](docs/AFE_Cardiac_5-45Hz.asc) + [`OPA365.lib`](docs/OPA365.lib)), rationale, and verification plots.
+> * **[Fabrication-Ready KiCad 8 / 9 Project & JLCPCB PCBA Files](hardware_pcb/EarScope_NanoR4/)** — Complete schematic (`.kicad_sch`), `100%` routed `68.0 × 20.0 mm` 2-layer PCB (`.kicad_pcb`), custom footprint library (`.pretty`), and turnkey LCSC/JLCPCB BOM + CPL CSVs.
+> * **[`kicad-happy` Automated Design Review & Fabrication Release Gate (`PASS`)](docs/kicad_happy_design_review.md)** — Full electrical, DFM (`0` violations), thermal, and EMC (`97.0 / 100`) sign-off via [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
 > * **[KiCad 8 / 9 Schematic & PCB Design Guide](docs/kicad_pcb_design_guide.md)** — Complete symbol/footprint mapping, custom castellated Nano R4 footprint, `68.0 × 20.0 mm` 2-layer layout, active `VREF` guard ring, and Gerber export.
 > * **Enclosure & Carrier PCB Co-Design Guide** (`docs/fusion360_enclosure_guide.md` — *Arduino Nano R4 `68 × 20 mm` mechanical revision next*).
 
@@ -135,35 +137,49 @@ void loop() {
 
 ---
 
-## 6. Production Bill of Materials (BOM)
+## 6. Fabrication-Ready KiCad 8 / 9 Carrier PCB & `kicad-happy` Verification (`PASS`)
+
+The complete schematic, custom SMD footprints, `100%` routed `68.0 × 20.0 × 1.6 mm` 2-layer carrier PCB, and turnkey JLCPCB PCBA files live in [`hardware_pcb/EarScope_NanoR4/`](hardware_pcb/EarScope_NanoR4/) and passed all 9 automated release-gate checks in [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (full audit in [`docs/kicad_happy_design_review.md`](docs/kicad_happy_design_review.md)):
+
+* **Routing & Parity:** `44 / 44` schematic-to-PCB net parity (`17 / 17` active multi-pad nets `100%` routed with `45°` octile geometry, `0` unrouted nets, `52` vias including `31` `GND` return-path stitching vias over an unbroken `B.Cu` `GND` plane).
+* **DFM & Clearances:** **`standard` (`$2`) 2-layer tier** with **`0` DFM violations**, `0` courtyard overlaps, `0` silkscreen-pad overlaps (`min_track = 0.25 mm`, `min_drill = 0.30 mm`, `min_annular_ring = 0.15 mm`).
+* **EMC & ESD Sign-Off:** **`97.0 / 100` EMC score (`0` errors)** — bidirectional low-capacitance ESD diode **`D1` (`PESD3V3L1BA`, `SOD-323`)** right at `J1` (`PJ-320A`), decoupling capacitors `< 2 mm` from `U1`, `U2`, and `AREF`, and companion `GND` stitching vias beside any layer transition.
+* **Turnkey PCBA Outputs:** Ready-to-upload [`EarScope_JLCPCB_BOM.csv`](hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_BOM.csv) (`19` LCSC lines / `30` SMD parts) and [`EarScope_JLCPCB_CPL.csv`](hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_CPL.csv) (`30` placement rows; `A1` Nano R4 hand-soldered flush via castellated pads).
+
+![EarScope Routed 2-Layer Carrier PCB](docs/figures/earscope_routed_pcb.svg)
+
+---
+
+## 7. Production Bill of Materials (BOM)
 
 All passive components use **`0805` SMD** packages for straightforward hand soldering or turnkey PCBA (`JLCPCB` / `PCBWay`).
 
 | Designator | Value / Part Number | Package / Footprint | Qty | Engineering Notes |
 | :--- | :--- | :--- | :---: | :--- |
-| **MCU** | `Arduino Nano R4` (`ABX00142`) | Castellated SMD (`2×15`, `45×18 mm`) | 1 | Flush-mounted via castellated pads (no pin headers); onboard USB-C |
+| **A1 (MCU)** | `Arduino Nano R4` (`ABX00142`) | Castellated SMD (`2×15`, `45×18 mm`) | 1 | Flush-mounted via castellated pads (no pin headers); onboard USB-C |
 | **U1, U2** | `OPA2365AIDR` | SOIC-8 | 2 | Dual `4.5 nV/√Hz`, zero-crossover rail-to-rail CMOS op-amp |
-| **U3** | `MCP1700T-3302E/TT` | SOT-23-3 | 1 | Low-noise `3.30 V` LDO powering `VCC_ANA` + Nano R4 `AREF` |
-| **J1** | `PJ-320A` (3.5 mm TRRS) | SMD (`12.1 × 6.1 × 5.0 mm`) | 1 | Earphone / headset AUX input receptacle |
-| **SW1** | `C&K PCM12SMTR` / `MSK12C02` | `Button_Switch_SMD:SW_SPDT_PCM12` (`6.7×2.6 mm`) | 1 | External side slide switch (`EAR` = Bias OFF, `MIC` = `2.2 kΩ` Bias ON) |
-| **C_IN** | `68 nF` | 0805 (`C0G/NP0` or `X7R`, `≥25 V`) | 1 | `2.34 Hz` breathing pre-filter (`C0G` preferred to eliminate piezo microphonics) |
-| **C_F** | `1 nF` | 0805 (`C0G/NP0`) | 1 | Stage 1 feedback HF/EMI roll-off (`1.59 kHz`) across `R_F` |
-| **C_1H, C_2H** | `1 µF` | 0805 (`X7R`, `≥16 V`) | 2 | Stage 2 `5 Hz` Sallen-Key HPF capacitors |
-| **C_AL** | `200 nF` (or `2 × 100 nF` parallel) | 0805 (`C0G` or `X7R`) | 1 | Stage 3 `45 Hz` Sallen-Key LPF feedback capacitor |
-| **C_BL, C_OUT** | `100 nF` | 0805 (`C0G` or `X7R`) | 2 | `C_BL` tied to **`VREF`**; `C_OUT` tied to **`GND`** right at Nano R4 `A1` |
-| **C_DEC1, C_DEC2, C_AREF** | `100 nF` | 0805 (`X7R`) | 3 | Local bypass (`< 2 mm`) on `U1`, `U2`, and Nano R4 `AREF` pin |
-| **C_REF, C_LDO_IN, C_LDO_OUT** | `10 µF` | 0805 (`X7R`, `≥10 V`) | 3 | `VREF_DIV` noise filter (`U2B+`) and LDO input/output stabilization |
-| **R_REF1, R_REF2, R_F** | `100 kΩ` (`1%`) | 0805 (Thin Film) | 3 | Symmetric `1.650 V` divider and Stage 1 feedback resistor |
-| **R_BIAS** | `1 MΩ` (`1%`) | 0805 | 1 | Input DC bias reference to `VREF` |
-| **R_G** | `220 Ω` (`1%`) | 0805 (+ optional parallel pad) | 1 | Selected Stage 1 gain (`×455.5` / `53.2 dB`) |
-| **R_AH, R_BH** | `22.6 kΩ`, `45.3 kΩ` (`1%`) | 0805 | 1 ea | Stage 2 `5 Hz` Butterworth Sallen-Key HPF resistors |
-| **R_1L, R_2L** | `24.9 kΩ` (`1%`) | 0805 | 2 | Stage 3 `45 Hz` Butterworth Sallen-Key LPF resistors |
-| **R_OUT** | `100 Ω` (`1%`) | 0805 | 1 | Isolates `U2A` output from `C_OUT` SAR charge reservoir |
-| **R_MIC** | `2.2 kΩ` (`1%`) | 0805 | 1 | Electret capsule bias pull-up in series with `SW1` (`VCC_ANA` side) |
+| **U3** | `MCP1700T-3302E/TT` | SOT-23-3 | 1 | Low-noise `3.30 V` LDO powering `+3V3_ANA` (`VCC_ANA`) + Nano R4 `AREF` |
+| **D1** | `PESD3V3L1BA` | SOD-323 | 1 | Low-capacitance bidirectional `3.3 V` ESD clamp on `J1` (`VIN_RAW`, LCSC `C15772`) |
+| **J1** | `PJ-320A` (3.5 mm TRRS) | SMD (`12.1 × 6.1 × 5.0 mm`) | 1 | Earphone / headset AUX input receptacle (`Tip` = signal, `Ring2+Sleeve` = `GND`) |
+| **SW1** | `C&K PCM12SMTR` / `MSK12C02` | `SW_SPDT_PCM12` (`6.7×2.6 mm`) | 1 | External side slide switch (`EAR` = Bias OFF, `MIC` = `2.2 kΩ` Bias ON) |
+| **C1 (`C_IN`)** | `68 nF` | 0805 (`C0G/NP0` or `X7R`, `≥25 V`) | 1 | `2.34 Hz` breathing pre-filter (`C0G` preferred to eliminate piezo microphonics) |
+| **C2 (`C_F`)** | `1 nF` | 0805 (`C0G/NP0`) | 1 | Stage 1 feedback HF/EMI roll-off (`1.59 kHz`) across `R_F` |
+| **C3, C4 (`C_1H, C_2H`)** | `1 µF` | 0805 (`X7R`, `≥16 V`) | 2 | Stage 2 `5 Hz` Sallen-Key HPF capacitors |
+| **C5 (`C_AL`)** | `200 nF` (or `2 × 100 nF` parallel) | 0805 (`C0G` or `X7R`) | 1 | Stage 3 `45 Hz` Sallen-Key LPF feedback capacitor |
+| **C6, C7 (`C_BL, C_OUT`)** | `100 nF` | 0805 (`C0G` or `X7R`) | 2 | `C6` tied to **`VREF`**; `C7` tied to **`GND`** right at Nano R4 `A1` |
+| **C11–C13 (`C_DEC1..CAREF`)** | `100 nF` | 0805 (`X7R`) | 3 | Local bypass (`< 2 mm`) on `U1`, `U2`, and Nano R4 `AREF` pin |
+| **C8–C10 (`C_REF, CLDO`)** | `10 µF` | 0805 (`X7R`, `≥10 V`) | 3 | `VREF_DIV` noise filter (`U2B+`) and LDO input/output stabilization |
+| **R4–R6 (`R_F, R_REF1/2`)** | `100 kΩ` (`1%`) | 0805 (Thin Film) | 3 | Stage 1 feedback resistor and symmetric `1.650 V` divider |
+| **R1 (`R_BIAS`)** | `1 MΩ` (`1%`) | 0805 | 1 | Input DC bias reference to `VREF` |
+| **R2 (`R_G`), R3 (`DNP`)** | `220 Ω` (`1%`) + `DNP` alt pad | 0805 | 1 + 1 | Selected Stage 1 gain (`×455.5` / `53.2 dB`) + parallel trim footprint |
+| **R7, R8 (`R_AH, R_BH`)** | `22.6 kΩ`, `45.3 kΩ` (`1%`) | 0805 | 1 ea | Stage 2 `5 Hz` Butterworth Sallen-Key HPF resistors |
+| **R9, R10 (`R_1L, R_2L`)** | `24.9 kΩ` (`1%`) | 0805 | 2 | Stage 3 `45 Hz` Butterworth Sallen-Key LPF resistors |
+| **R11 (`R_OUT`)** | `100 Ω` (`1%`) | 0805 | 1 | Isolates `U2A` output from `C7` SAR charge reservoir |
+| **R12 (`R_MIC`)** | `2.2 kΩ` (`1%`) | 0805 | 1 | Electret capsule bias pull-up in series with `SW1` (`+3V3_ANA` side) |
 
 ---
 
-## 7. Repository Structure
+## 8. Repository Structure
 
 ```text
 EarScope/
@@ -173,14 +189,23 @@ EarScope/
 │   ├── OPA365.lib                                  # Texas Instruments OPA365 / OPA2365 SPICE macro-model
 │   ├── ltspice_simulation_guide.md                 # LTspice verification guide & benchmark results
 │   ├── kicad_pcb_design_guide.md                   # Step-by-step KiCad 8/9 schematic, PCB layout & Gerber guide
+│   ├── kicad_happy_design_review.md                # Automated kicad-happy PCB review & PASS release gate report
 │   ├── fusion360_enclosure_guide.md                # Parametric 3D enclosure & PCB co-design guide
-│   └── figures/                                    # Verification waveforms & PCB floorplan SVG diagrams
+│   └── figures/                                    # Verification waveforms & PCB layout SVG diagrams
 │       ├── afe_bode_response.svg
 │       ├── cin_preamp_saturation_comparison.svg
 │       ├── transient_startup_and_cardiac_output.svg
 │       ├── input_referred_noise_spectrum.svg
-│       └── kicad_pcb_floorplan.svg
-├── hardware_pcb/                                   # KiCad project, custom footprints & Gerber outputs
+│       ├── kicad_pcb_floorplan.svg
+│       └── earscope_routed_pcb.svg
+├── hardware_pcb/
+│   └── EarScope_NanoR4/                            # Complete KiCad 8/9 project & JLCPCB PCBA outputs
+│       ├── EarScope_NanoR4.kicad_pro
+│       ├── EarScope_NanoR4.kicad_sch               # 37 symbols (31 BOM parts + TP1–TP6), 44 nets
+│       ├── EarScope_NanoR4.kicad_pcb               # 68.0 × 20.0 mm 2-layer 100% routed carrier PCB
+│       ├── fp-lib-table
+│       ├── EarScope_Footprints.pretty/             # 9 custom/verified SMD footprints (.kicad_mod)
+│       └── bom/                                    # Master BOM + JLCPCB LCSC BOM & CPL CSVs
 ├── firmware_nano_r4/                               # Arduino Nano R4 (RA4M1) 14-bit 500 Hz USB-C streamer
 └── software_pc/                                    # Python real-time visualization & SCG/GCG reconstruction
 ```

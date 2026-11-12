@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "EarScope_Footprints")(type "KiCad")(uri "${KIPRJMOD}/EarScope_Footprints.pretty")(options "")(descr "EarScope Project Footprints"))
+)

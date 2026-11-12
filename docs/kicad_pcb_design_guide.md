@@ -2,6 +2,9 @@
 
 This guide provides a complete, step-by-step workflow to translate the validated LTspice schematic ([`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc)) into a production-ready **2-layer Mixed-Signal Carrier PCB** in **KiCad 8 / KiCad 9**, ready for fabrication at **JLCPCB** or **PCBWay** and mechanical integration in **Fusion 360**.
 
+> [!TIP]
+> **Ready-to-Manufacture KiCad 8 / 9 Project Included:** The complete project — schematic ([`EarScope_NanoR4.kicad_sch`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_sch)), `100%` routed 2-layer carrier PCB ([`EarScope_NanoR4.kicad_pcb`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_pcb)), custom footprint library ([`EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/)), and turnkey JLCPCB BOM/CPL files ([`bom/`](../hardware_pcb/EarScope_NanoR4/bom/)) — is already built and verified in [`hardware_pcb/EarScope_NanoR4/`](../hardware_pcb/EarScope_NanoR4/). See [`kicad_happy_design_review.md`](kicad_happy_design_review.md) for the full [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) **`PASS`** fabrication release gate report (`9/9` checks passed, `0` DFM violations, `97.0 / 100` EMC score).
+
 ---
 
 ## 1. Board Architecture & Manufacturing Specifications
@@ -12,9 +15,11 @@ To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz
 * **Layer Stackup:**
   * **`F.Cu` (Top Layer):** All SMD components, Arduino Nano R4 castellated flush mount, short analog signal traces, and a `VREF` active guard ring around the high-impedance preamp input.
   * **`B.Cu` (Bottom Layer):** **100% continuous, unbroken `GND` copper pour** acting as an electromagnetic shield underneath both the AFE and the Nano R4.
-* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, SMD `PJ-320A` jack, side-actuated `SW1` slide switch, and headerless castellated **Arduino Nano R4 `ABX00142`**) — easy to hand-solder or order via turnkey PCBA.
+* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, `SOD-323` ESD diode, SMD `PJ-320A` jack, side-actuated `SW1` slide switch, and headerless castellated **Arduino Nano R4 `ABX00142`**) — easy to hand-solder or order via turnkey PCBA.
 
 ![EarScope KiCad 2-Layer Carrier PCB Floorplan](figures/kicad_pcb_floorplan.svg)
+
+![EarScope Routed 2-Layer Carrier PCB](figures/earscope_routed_pcb.svg)
 
 ---
 
@@ -37,13 +42,13 @@ To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz
 | :--- | :---: | :---: | :--- |
 | **`Default` (Analog Signal)** | `0.25 mm` | `0.20 mm` | `VIN_RAW`, `OUT_PRE`, `HPF_MID`, `OUT_HPF`, `LPF_MID`, `OUT_LPF`, `ADC_IN` |
 | **`HighZ_Input`** | `0.25 mm` | **`0.35 mm`** | `IN_POS` (between `CIN`, `RBIAS`, and `U1` Pin 3) |
-| **`Power`** | **`0.50 mm`** | `0.25 mm` | `+5V_USB`, `VCC_ANA`, `VREF`, `GND` |
+| **`Power`** | **`0.50 mm`** | `0.25 mm` | `+5V_USB`, `+3V3_ANA` (`VCC_ANA` in SPICE), `VREF`, `GND` |
 
 ---
 
 ## 3. Step 2 — LTspice-to-KiCad Component, Symbol & Footprint Mapping
 
-Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc). All symbols and footprints (except `PJ-320A`, noted below) ship **built-in** with KiCad 8/9:
+Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc) (plus `D1` ESD protection added for `IEC 61000-4-2` off-board AUX cable compliance). All symbols and footprints are bundled ready-to-use in [`hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/):
 
 | LTspice Name | KiCad Ref | Value / Part Number | Built-In KiCad Symbol | Built-In KiCad Footprint | LCSC Part # (Ref) |
 | :--- | :---: | :--- | :--- | :--- | :---: |
@@ -51,7 +56,8 @@ Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac
 | `U1` (`U1A, U1B`) | **`U1`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` *(or `LM358`)* | `Package_SO:SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
 | `U2` (`U2A, U2B`) | **`U2`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` *(or `LM358`)* | `Package_SO:SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
 | `VSUP` (LDO) | **`U3`** | `MCP1700T-3302E/TT` | `Regulator_Linear:MCP1700x-3302xx_SOT23` | `Package_TO_SOT_SMD:SOT-23` | `C39051` |
-| `VEAR` (Jack) | **`J1`** | `PJ-320A` (3.5mm TRRS) | `Connector_Audio:AudioJack4` | `PJ-320A` SMD 4-pad *(import from EasyEDA/LCSC `C95555`)* | `C95555` |
+| ESD Clamp | **`D1`** | `PESD3V3L1BA` (`3.3V` Bidirectional TVS) | `Device:D_TVS` | `Diode_SMD:D_SOD-323` (`SOD-323`) | `C15772` |
+| `VEAR` (Jack) | **`J1`** | `PJ-320A` (3.5mm TRRS) | `Connector_Audio:AudioJack4` | `PJ-320A` SMD 4-pad *(bundled in `.pretty`)* | `C95555` |
 | Bias Switch | **`SW1`** | `C&K PCM12SMTR` / `MSK12C02` (`EAR/MIC`) | `Switch:SW_SPDT` | `Button_Switch_SMD:SW_SPDT_PCM12` *(includes 3D STEP model)* | `C221836` |
 | `CIN` | **`C1`** | `68 nF` (`C0G/NP0` or `X7R`, `≥25V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1589` / `C0G` |
 | `C1` (`CF` in doc) | **`C2`** | `1 nF` (`C0G/NP0`, `50V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1706` |
