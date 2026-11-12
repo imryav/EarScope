@@ -3,8 +3,9 @@
 **EarScope** is an ultra-low-noise, compact hardware and software acquisition platform that captures acoustic and micro-mechanical cardiac biosignals (**PCG**, **SCG**, and **GCG**) directly from an occluded ear canal using standard wired earphones (`3.5 mm` AUX), inspired by *LubDubDecoder (ACM CHI '26)*.
 
 > **Project Engineering Documentation:**
-> * **[LTspice Finalization, Verification & Simulation Results](docs/ltspice_simulation_guide.md)** — Complete ratiometric `3.30 V` analog front-end schematic (`AFE_Cardiac_5-45Hz.asc`), stage-by-stage design rationale, and full verification plots.
-> * **Enclosure & Carrier PCB Co-Design Guide** (`docs/fusion360_enclosure_guide.md` — *Arduino Nano R4 mechanical revision next*).
+> * **[LTspice Finalization, Verification & Simulation Results](docs/ltspice_simulation_guide.md)** — Validated `3.30 V` ratiometric schematic ([`AFE_Cardiac_5-45Hz.asc`](docs/AFE_Cardiac_5-45Hz.asc) + [`OPA365.lib`](docs/OPA365.lib)), rationale, and verification plots.
+> * **[KiCad 8 / 9 Schematic & PCB Design Guide](docs/kicad_pcb_design_guide.md)** — Complete symbol/footprint mapping, custom castellated Nano R4 footprint, `68.0 × 20.0 mm` 2-layer layout, active `VREF` guard ring, and Gerber export.
+> * **Enclosure & Carrier PCB Co-Design Guide** (`docs/fusion360_enclosure_guide.md` — *Arduino Nano R4 `68 × 20 mm` mechanical revision next*).
 
 ---
 
@@ -167,15 +168,18 @@ All passive components use **`0805` SMD** packages for straightforward hand sold
 EarScope/
 ├── README.md                                       # Main system architecture, BOM & results (English)
 ├── docs/
-│   ├── ltspice_simulation_guide.md                 # Step-by-step LTspice guide & verification benchmark suite
-│   ├── figures/                                    # Validated AC, saturation, transient & noise SVG plots
-│   │   ├── afe_bode_response.svg
-│   │   ├── cin_preamp_saturation_comparison.svg
-│   │   ├── transient_startup_and_cardiac_output.svg
-│   │   └── input_referred_noise_spectrum.svg
-│   └── fusion360_enclosure_guide.md                # Parametric 3D enclosure & PCB co-design guide
-├── simulation/                                     # LTspice schematics & SPICE models (AFE_Cardiac_5-45Hz.asc)
-├── hardware_pcb/                                   # KiCad / EasyEDA schematic, layout & Gerbers
+│   ├── AFE_Cardiac_5-45Hz.asc                      # Finalized LTspice 26 schematic (Arduino Nano R4 target)
+│   ├── OPA365.lib                                  # Texas Instruments OPA365 / OPA2365 SPICE macro-model
+│   ├── ltspice_simulation_guide.md                 # LTspice verification guide & benchmark results
+│   ├── kicad_pcb_design_guide.md                   # Step-by-step KiCad 8/9 schematic, PCB layout & Gerber guide
+│   ├── fusion360_enclosure_guide.md                # Parametric 3D enclosure & PCB co-design guide
+│   └── figures/                                    # Verification waveforms & PCB floorplan SVG diagrams
+│       ├── afe_bode_response.svg
+│       ├── cin_preamp_saturation_comparison.svg
+│       ├── transient_startup_and_cardiac_output.svg
+│       ├── input_referred_noise_spectrum.svg
+│       └── kicad_pcb_floorplan.svg
+├── hardware_pcb/                                   # KiCad project, custom footprints & Gerber outputs
 ├── firmware_nano_r4/                               # Arduino Nano R4 (RA4M1) 14-bit 500 Hz USB-C streamer
 └── software_pc/                                    # Python real-time visualization & SCG/GCG reconstruction
 ```
