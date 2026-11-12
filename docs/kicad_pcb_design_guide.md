@@ -71,7 +71,6 @@ Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac
 | `R1L, R2L` | **`R9, R10`** | `24.9 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C25962` |
 | `ROUT` | **`R11`** | `100 Ω` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17408` |
 | `RMIC` | **`R12`** | `2.2 kΩ` (`1%`, switched via `SW1`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17520` |
-| TRRS Sleeve Jumpers | **`JP2, JP3`** | Flat SMD Solder Jumpers *(4-pole CTIA opt.)* | `Jumper:SolderJumper_2_Bridged` / `_3_Bridged12` | `Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm` | Copper Only |
 | Scope Test Pads | **`TP1–TP6`** | `1.2 mm` Flat SMD Test Points | `Connector:TestPoint` | `TestPoint:TestPoint_Pad_D1.2mm` | Copper Only |
 
 ---
@@ -141,12 +140,12 @@ To switch effortlessly between **Passive Earphones** (*Speaker-as-Mic*, zero DC 
      * **`SW1` Pin 2 (`Common`):** Connect to Pad 1 of **`R12` (`2.2 kΩ`)**; connect Pad 2 of `R12` to **`VIN_RAW`** (ahead of `C1 = 68 nF`).
      * **`SW1` Pin 3 (`MIC` / Electret Bias Position):** Connect to **`VCC_ANA` (`+3.300 V`)**. Supplies bias current to the electret capsule's internal JFET while `C1` (`68 nF`) blocks the `~1.6–2.2 V` DC bias from `U1A`.
      * **Metal Shell Shielding:** In `Pcbnew`, tie `SW1`'s 4 outer mechanical SMD anchor pads to **`GND`** (click a shell pad $\rightarrow$ `E` $\rightarrow$ Net: `GND`) so touching the switch with a finger shunts ESD and `50 Hz` body capacitance straight to the bottom ground plane.
-3. **Universal `PJ-320A` (`J1`) TRRS Wiring (Supports Both 3-Pole TRS & 4-Pole CTIA Headsets):**
-   * **4-pole smartphone headsets (CTIA)** place `GND` on **Ring 2** and inline mic on **Sleeve**, whereas **3-pole TRS plugs** have a long ground sleeve bridging **Ring 2 + Sleeve**. Tying *only* `Sleeve` to `GND` would leave a 4-pole earbud's speaker return open-circuit!
-   * Wire `J1` as follows:
-     1. **`Ring 2` contact** $\rightarrow$ Connect **permanently to `GND`** (works for *both* 3-pole TRS earphones and 4-pole CTIA headsets, plus standard 2/3-pole electret stethoscope mics wired to `Tip + Sleeve`).
-     2. **`JP2` (`SolderJumper_2_Bridged` from `Sleeve` to `GND`):** Default bridged ties `Sleeve` + `Ring 2` to `GND`; cut open only if using a 4-pole CTIA inline boom mic on `Sleeve`.
-     3. **`JP3` (`SolderJumper_3_Bridged12` $\rightarrow$ `VIN_RAW`):** Default `1–2` bridged connects **`Tip` (Left Earbud / Standard TRS Mic)** to `VIN_RAW`; bridge `2–3` only to pick up `Sleeve` on a 4-pole CTIA plug.
+3. **Direct Jumper-Free `PJ-320A` (`J1`) Wiring (Supports 3-Pole TRS Earphones, 4-Pole TRRS Earbuds & `3.5 mm` Electret Mics):**
+   * **4-pole smartphone earbuds (CTIA)** place speaker `GND` on **Ring 2**, whereas **3-pole TRS earphones** and **dedicated `3.5 mm` (`TS`/`TRS`) electret microphones** use **Sleeve** (or `Ring 2 + Sleeve`) as `GND`. Tying *only* `Sleeve` to `GND` would leave a 4-pole earbud's speaker return open-circuit!
+   * Wire `J1`'s 4 pads directly (zero solder jumpers needed):
+     1. **`Tip`** $\rightarrow$ Connect directly to **`VIN_RAW`** (carries the Left in-ear speaker coil in `EAR` mode, or the electret capsule signal + `2.2 kΩ` DC bias in `MIC` mode).
+     2. **`Ring 1`** $\rightarrow$ Leave unconnected (**No-Connect `X`** flag; Right earbud unused).
+     3. **`Ring 2` AND `Sleeve`** $\rightarrow$ Connect **both permanently to `GND`**. This guarantees a solid ground return whether you plug in 3-pole TRS earphones, 4-pole CTIA earbuds (while safely muting any unused external cord mic), or a dedicated `3.5 mm` electret microphone capsule!
 
 *(Before ordering PCBs, always verify the exact `Tip / Ring 1 / Ring 2 / Sleeve` pad numbers of your imported `PJ-320A` footprint against the supplier's mechanical drawing — e.g., LCSC `C95555`).*
 
