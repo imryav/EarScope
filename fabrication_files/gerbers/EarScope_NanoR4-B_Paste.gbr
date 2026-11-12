@@ -1,0 +1,13 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,8.0.6*%
+%TF.CreationDate,2026-11-12T20:00:00+00:00*%
+%TF.ProjectId,EarScope_NanoR4,45617253-636f-4706-955f-4e616e6f5234,1.0*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Paste,Bot*%
+%TF.FilePolarity,Positive*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+%MOMM*%
+%LPD*%
+G01*
+G04 Single-sided top assembly — no bottom paste*
+M02*

@@ -1,0 +1,27 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,8.0.6*%
+%TF.CreationDate,2026-11-12T20:00:00+00:00*%
+%TF.ProjectId,EarScope_NanoR4,45617253-636f-4706-955f-4e616e6f5234,1.0*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Soldermask,Bot*%
+%TF.FilePolarity,Negative*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+%MOMM*%
+%LPD*%
+G01*
+%TA.AperFunction,Material*%
+%ADD10C,0.880000*%
+%TD*%
+%TA.AperFunction,Material*%
+%ADD11C,0.980000*%
+%TD*%
+G04 All bottom vias tented; NPTH mechanical holes relieved*
+D10*
+X66400000Y-8800000D03*
+D10*
+X59400000Y-8800000D03*
+D11*
+X59300000Y-18180000D03*
+D11*
+X62300000Y-18180000D03*
+M02*

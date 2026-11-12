@@ -2,14 +2,15 @@
 
 **Project:** EarScope In-Ear Bio-Acoustic Cardiac Monitor (`5 Hz – 45 Hz` AFE + Arduino Nano R4 `ABX00142`)  
 **KiCad Project Directory:** [`hardware_pcb/EarScope_NanoR4/`](../hardware_pcb/EarScope_NanoR4/)  
-**Audit Suite:** [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (Schematic, Full Copper-Graph PCB, Cross-Analysis, EMC Pre-Compliance, BOM/JLCPCB Translator, and Fabrication Release Gate)  
-**Release Gate Verdict:** **`PASS — Ready for fabrication` (`9 pass / 0 warn / 0 fail`, EMC Score `97.0 / 100`)**
+**Turnkey Fabrication Package:** [`fabrication_files/`](../fabrication_files/) (`EarScope_NanoR4_Gerbers_JLCPCB.zip`, `gerbers/`, `EarScope_JLCPCB_BOM.csv`, `EarScope_JLCPCB_CPL.csv`)  
+**Audit Suite:** [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (Schematic, Full Copper-Graph PCB, Cross-Analysis, Gerber/Excellon CAM, EMC Pre-Compliance, BOM/JLCPCB Translator, and Fabrication Release Gate)  
+**Release Gate Verdict:** **`PASS — Ready for fabrication` (`11 pass / 0 warn / 0 fail`, EMC Score `97.0 / 100`)**
 
 ---
 
 ## 1. Executive Summary & Routed PCB Preview
 
-The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
+The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project with complete RS-274X Gerbers + Excellon drill outputs and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
 
 ![EarScope Nano R4 Routed 2-Layer PCB](figures/earscope_routed_pcb.svg)
 
@@ -19,9 +20,10 @@ The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, 
 | **PCB Layout & Copper Graph** | `analyze_pcb.py --full` | **100% Routed** | `17/17` multi-pad nets routed (`44/44` total net parity), `0` unrouted nets, `0` courtyard overlaps, `343` segments (`390.12 mm`), `52` vias (`31` `GND` stitching vias) |
 | **Schematic ↔ PCB Parity** | `cross_analysis.py` | **0 Errors / 0 Warnings** | 1:1 component, footprint, pin-to-pad, and net synchronization |
 | **DFM Capability** | `analyze_pcb.py` (`dfm`) | **Standard Tier (`0` Violations)** | Min track `0.25 mm`, min drill `0.30 mm`, min annular ring `0.15 mm`, approx min spacing `0.475 mm` (fits cheapest JLCPCB 2-layer standard pool) |
+| **Gerber & Drill CAM Audit** | `analyze_gerbers.py` | **0 Findings (`Complete`)** | All `9/9` `.gbrjob` layers present, closed `68.0 × 20.0 mm` `Edge.Cuts` loop, aligned extents, `52` PTH vias (`0.30 mm`) + `4` NPTH alignment holes (`0.80 / 0.90 mm`) |
 | **EMC Pre-Compliance** | `analyze_emc.py` | **`97.0 / 100` (`0` Errors)** | Continuous `B.Cu` solid `GND` plane, `VREF` guard trace around `IN_POS`, dual parallel ESD ground vias at `D1`, companion return-current `GND` vias |
-| **BOM & PCBA Export** | `bom_manager.py` + `translate_bom_pnp.py` | **100% Complete** | 20 BOM lines (19 LCSC SMT/THT lines = 30 JLCPCB PCBA parts + 1 user-soldered Arduino Nano R4 `ABX00142`) |
-| **Fabrication Release Gate** | `fab_release_gate.py` | **`PASS`** | **`9 pass, 0 warn, 0 fail`** |
+| **BOM & PCBA Export** | `bom_manager.py` + `translate_bom_pnp.py` | **100% Complete** | 20 BOM lines (19 LCSC SMT lines = 30 JLCPCB PCBA parts + 1 user-soldered Arduino Nano R4 `ABX00142`) |
+| **Fabrication Release Gate** | `fab_release_gate.py` | **`PASS`** | **`11 pass, 0 warn, 0 fail`** |
 
 ---
 

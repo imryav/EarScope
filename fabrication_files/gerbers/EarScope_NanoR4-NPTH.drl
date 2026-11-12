@@ -1,0 +1,24 @@
+M48
+; DRILL file {EarScope_NanoR4.kicad_pcb} date 2026-11-12T20:00:00+00:00
+; FORMAT={-:-/ absolute / metric / decimal}
+; #@! TF.GenerationSoftware,KiCad,Pcbnew,8.0.6
+; #@! TF.CreationDate,2026-11-12T20:00:00+00:00
+; #@! TF.ProjectId,EarScope_NanoR4,45617253-636f-4706-955f-4e616e6f5234,1.0
+; #@! TF.FileFunction,NonPlated,1,2,NPTH
+FMAT,2
+METRIC
+; #@! TA.AperFunction,NonPlated,NPTH,ComponentDrill
+T1C0.800
+; #@! TA.AperFunction,NonPlated,NPTH,ComponentDrill
+T2C0.900
+%
+G90
+G05
+T1
+X66.4000Y-8.8000
+X59.4000Y-8.8000
+T2
+X59.3000Y-18.1800
+X62.3000Y-18.1800
+T0
+M30

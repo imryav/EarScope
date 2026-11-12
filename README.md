@@ -3,9 +3,10 @@
 **EarScope** is an ultra-low-noise, compact hardware and software acquisition platform that captures acoustic and micro-mechanical cardiac biosignals (**PCG**, **SCG**, and **GCG**) directly from an occluded ear canal using standard wired earphones (`3.5 mm` AUX), inspired by *LubDubDecoder (ACM CHI '26)*.
 
 > **Project Engineering Documentation & Hardware Files:**
+> * **[Turnkey PCB Fabrication & JLCPCB PCBA Package (`fabrication_files/`)](fabrication_files/)** — Ready-to-order Gerber/Drill ZIP ([`EarScope_NanoR4_Gerbers_JLCPCB.zip`](fabrication_files/EarScope_NanoR4_Gerbers_JLCPCB.zip)), unpacked RS-274X Gerbers + Excellon Drills, LCSC BOM + CPL CSVs, and ordering guide.
 > * **[LTspice Finalization, Verification & Simulation Results](docs/ltspice_simulation_guide.md)** — Validated `3.30 V` ratiometric schematic ([`AFE_Cardiac_5-45Hz.asc`](docs/AFE_Cardiac_5-45Hz.asc) + [`OPA365.lib`](docs/OPA365.lib)), rationale, and verification plots.
-> * **[Fabrication-Ready KiCad 8 / 9 Project & JLCPCB PCBA Files](hardware_pcb/EarScope_NanoR4/)** — Complete schematic (`.kicad_sch`), `100%` routed `68.0 × 20.0 mm` 2-layer PCB (`.kicad_pcb`), custom footprint library (`.pretty`), and turnkey LCSC/JLCPCB BOM + CPL CSVs.
-> * **[`kicad-happy` Automated Design Review & Fabrication Release Gate (`PASS`)](docs/kicad_happy_design_review.md)** — Full electrical, DFM (`0` violations), thermal, and EMC (`97.0 / 100`) sign-off via [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
+> * **[Fabrication-Ready KiCad 8 / 9 Project (`hardware_pcb/EarScope_NanoR4/`)](hardware_pcb/EarScope_NanoR4/)** — Complete editable schematic (`.kicad_sch`), `100%` routed `68.0 × 20.0 mm` 2-layer PCB (`.kicad_pcb`), and custom footprint library (`.pretty`).
+> * **[`kicad-happy` Automated Design Review & Fabrication Release Gate (`11/11 PASS`)](docs/kicad_happy_design_review.md)** — Full electrical, Gerber/CAM, DFM (`0` violations), and EMC (`97.0 / 100`) sign-off via [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
 > * **[KiCad 8 / 9 Schematic & PCB Design Guide](docs/kicad_pcb_design_guide.md)** — Complete symbol/footprint mapping, custom castellated Nano R4 footprint, `68.0 × 20.0 mm` 2-layer layout, active `VREF` guard ring, and Gerber export.
 > * **Enclosure & Carrier PCB Co-Design Guide** (`docs/fusion360_enclosure_guide.md` — *Arduino Nano R4 `68 × 20 mm` mechanical revision next*).
 
@@ -139,12 +140,13 @@ void loop() {
 
 ## 6. Fabrication-Ready KiCad 8 / 9 Carrier PCB & `kicad-happy` Verification (`PASS`)
 
-The complete schematic, custom SMD footprints, `100%` routed `68.0 × 20.0 × 1.6 mm` 2-layer carrier PCB, and turnkey JLCPCB PCBA files live in [`hardware_pcb/EarScope_NanoR4/`](hardware_pcb/EarScope_NanoR4/) and passed all 9 automated release-gate checks in [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (full audit in [`docs/kicad_happy_design_review.md`](docs/kicad_happy_design_review.md)):
+The editable KiCad 8/9 source project lives in [`hardware_pcb/EarScope_NanoR4/`](hardware_pcb/EarScope_NanoR4/), while the ready-to-order manufacturing package lives in [`fabrication_files/`](fabrication_files/). All design and CAM files passed **`11 / 11` automated release-gate checks** in [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (full audit in [`docs/kicad_happy_design_review.md`](docs/kicad_happy_design_review.md)):
 
 * **Routing & Parity:** `44 / 44` schematic-to-PCB net parity (`17 / 17` active multi-pad nets `100%` routed with `45°` octile geometry, `0` unrouted nets, `52` vias including `31` `GND` return-path stitching vias over an unbroken `B.Cu` `GND` plane).
 * **DFM & Clearances:** **`standard` (`$2`) 2-layer tier** with **`0` DFM violations**, `0` courtyard overlaps, `0` silkscreen-pad overlaps (`min_track = 0.25 mm`, `min_drill = 0.30 mm`, `min_annular_ring = 0.15 mm`).
+* **Gerber & Drill CAM Audit:** **`0` findings (`Complete`)** — all `9/9` RS-274X (X2) Gerber layers + `PTH.drl` (`52` vias) + `NPTH.drl` (`4` alignment holes) + `.gbrjob` bundled in [`EarScope_NanoR4_Gerbers_JLCPCB.zip`](fabrication_files/EarScope_NanoR4_Gerbers_JLCPCB.zip).
 * **EMC & ESD Sign-Off:** **`97.0 / 100` EMC score (`0` errors)** — bidirectional low-capacitance ESD diode **`D1` (`PESD3V3L1BA`, `SOD-323`)** right at `J1` (`PJ-320A`), decoupling capacitors `< 2 mm` from `U1`, `U2`, and `AREF`, and companion `GND` stitching vias beside any layer transition.
-* **Turnkey PCBA Outputs:** Ready-to-upload [`EarScope_JLCPCB_BOM.csv`](hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_BOM.csv) (`19` LCSC lines / `30` SMD parts) and [`EarScope_JLCPCB_CPL.csv`](hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_CPL.csv) (`30` placement rows; `A1` Nano R4 hand-soldered flush via castellated pads).
+* **Turnkey PCBA Outputs:** Ready-to-upload [`EarScope_JLCPCB_BOM.csv`](fabrication_files/EarScope_JLCPCB_BOM.csv) (`19` LCSC lines / `30` SMD parts) and [`EarScope_JLCPCB_CPL.csv`](fabrication_files/EarScope_JLCPCB_CPL.csv) (`30` placement rows; `A1` Nano R4 hand-soldered flush via castellated pads).
 
 ![EarScope Routed 2-Layer Carrier PCB](docs/figures/earscope_routed_pcb.svg)
 
@@ -184,6 +186,13 @@ All passive components use **`0805` SMD** packages for straightforward hand sold
 ```text
 EarScope/
 ├── README.md                                       # Main system architecture, BOM & results (English)
+├── fabrication_files/                              # Ready-to-order PCB & PCBA manufacturing package
+│   ├── README.md                                   # JLCPCB / PCBWay ordering & Nano R4 soldering guide
+│   ├── EarScope_NanoR4_Gerbers_JLCPCB.zip          # Single-upload Gerber RS-274X + Excellon Drill ZIP
+│   ├── EarScope_JLCPCB_BOM.csv                     # Turnkey LCSC SMT Bill of Materials (19 lines / 30 parts)
+│   ├── EarScope_JLCPCB_CPL.csv                     # Turnkey Pick-and-Place coordinates (mm, Top side)
+│   ├── EarScope_Master_BOM.csv                     # Full 31-part engineering BOM (incl. Nano R4)
+│   └── gerbers/                                    # Unpacked .gbr, .drl & .gbrjob CAM layers
 ├── docs/
 │   ├── AFE_Cardiac_5-45Hz.asc                      # Finalized LTspice 26 schematic (Arduino Nano R4 target)
 │   ├── OPA365.lib                                  # Texas Instruments OPA365 / OPA2365 SPICE macro-model
@@ -199,13 +208,13 @@ EarScope/
 │       ├── kicad_pcb_floorplan.svg
 │       └── earscope_routed_pcb.svg
 ├── hardware_pcb/
-│   └── EarScope_NanoR4/                            # Complete KiCad 8/9 project & JLCPCB PCBA outputs
+│   └── EarScope_NanoR4/                            # Editable KiCad 8/9 source project & custom footprints
 │       ├── EarScope_NanoR4.kicad_pro
 │       ├── EarScope_NanoR4.kicad_sch               # 37 symbols (31 BOM parts + TP1–TP6), 44 nets
 │       ├── EarScope_NanoR4.kicad_pcb               # 68.0 × 20.0 mm 2-layer 100% routed carrier PCB
 │       ├── fp-lib-table
 │       ├── EarScope_Footprints.pretty/             # 9 custom/verified SMD footprints (.kicad_mod)
-│       └── bom/                                    # Master BOM + JLCPCB LCSC BOM & CPL CSVs
+│       └── bom/                                    # Source BOM & CPL exports
 ├── firmware_nano_r4/                               # Arduino Nano R4 (RA4M1) 14-bit 500 Hz USB-C streamer
 └── software_pc/                                    # Python real-time visualization & SCG/GCG reconstruction
 ```
