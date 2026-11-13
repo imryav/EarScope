@@ -10,18 +10,29 @@ G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
 %LPD*%
 G01*
 %TA.AperFunction,Material*%
-%ADD10C,0.880000*%
+%ADD10R,2.080000X1.680000*%
 %TD*%
 %TA.AperFunction,Material*%
-%ADD11C,0.980000*%
+%ADD11C,0.880000*%
 %TD*%
-G04 All bottom vias tented; NPTH mechanical holes relieved*
+%TA.AperFunction,Material*%
+%ADD12C,0.980000*%
+%TD*%
+G04 All bottom vias tented; THT pads and NPTH holes relieved*
 D10*
+X56700000Y-6500000D03*
+D10*
+X57800000Y-11100000D03*
+D10*
+X61800000Y-11100000D03*
+D10*
+X64800000Y-11100000D03*
+D11*
 X66400000Y-8800000D03*
-D10*
+D11*
 X59400000Y-8800000D03*
-D11*
+D12*
 X59300000Y-18180000D03*
-D11*
+D12*
 X62300000Y-18180000D03*
 M02*

@@ -4,24 +4,24 @@
 **KiCad Project Directory:** [`hardware_pcb/EarScope_NanoR4/`](../hardware_pcb/EarScope_NanoR4/)  
 **Turnkey Fabrication Package:** [`fabrication_files/`](../fabrication_files/) (`EarScope_NanoR4_Gerbers_JLCPCB.zip`, `gerbers/`, `EarScope_JLCPCB_BOM.csv`, `EarScope_JLCPCB_CPL.csv`)  
 **Audit Suite:** [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (Schematic, Full Copper-Graph PCB, Cross-Analysis, Gerber/Excellon CAM, EMC Pre-Compliance, BOM/JLCPCB Translator, and Fabrication Release Gate)  
-**Release Gate Verdict:** **`PASS — Ready for fabrication` (`11 pass / 0 warn / 0 fail`, EMC Score `97.0 / 100`)**
+**Release Gate Verdict:** **`PASS — Ready for fabrication` (`11 pass / 0 warn / 0 fail`, EMC Score `98.5 / 100`)**
 
 ---
 
 ## 1. Executive Summary & Routed PCB Preview
 
-The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project with complete RS-274X Gerbers + Excellon drill outputs and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy).
+The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project with complete RS-274X Gerbers + Excellon drill outputs and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) and native KiCad 8/9 DRC rules (`0` DRC errors).
 
 ![EarScope Nano R4 Routed 2-Layer PCB](figures/earscope_routed_pcb.svg)
 
 | Audit Stage | Analyzer Script | Result | Key Metrics |
 | :--- | :--- | :--- | :--- |
 | **Schematic Audit** | `analyze_schematic.py` | **0 Errors** | 37 placeable footprints (31 BOM parts + 6 SMD test points), 44 nets, 100% MPN & datasheet URL coverage |
-| **PCB Layout & Copper Graph** | `analyze_pcb.py --full` | **100% Routed** | `17/17` multi-pad nets routed (`44/44` total net parity), `0` unrouted nets, `0` courtyard overlaps, `343` segments (`390.12 mm`), `52` vias (`31` `GND` stitching vias) |
+| **PCB Layout & Copper Graph** | `analyze_pcb.py --full` | **100% Routed** | `17/17` multi-pad nets routed (`44/44` total net parity), `0` unrouted nets, `0` courtyard/keepout overlaps, `338` segments (`388.62 mm`), `49` vias (`28` `GND` stitching vias) |
 | **Schematic ↔ PCB Parity** | `cross_analysis.py` | **0 Errors / 0 Warnings** | 1:1 component, footprint, pin-to-pad, and net synchronization |
 | **DFM Capability** | `analyze_pcb.py` (`dfm`) | **Standard Tier (`0` Violations)** | Min track `0.25 mm`, min drill `0.30 mm`, min annular ring `0.15 mm`, approx min spacing `0.475 mm` (fits cheapest JLCPCB 2-layer standard pool) |
-| **Gerber & Drill CAM Audit** | `analyze_gerbers.py` | **0 Findings (`Complete`)** | All `9/9` `.gbrjob` layers present, closed `68.0 × 20.0 mm` `Edge.Cuts` loop, aligned extents, `52` PTH vias (`0.30 mm`) + `4` NPTH alignment holes (`0.80 / 0.90 mm`) |
-| **EMC Pre-Compliance** | `analyze_emc.py` | **`97.0 / 100` (`0` Errors)** | Continuous `B.Cu` solid `GND` plane, `VREF` guard trace around `IN_POS`, dual parallel ESD ground vias at `D1`, companion return-current `GND` vias |
+| **Gerber & Drill CAM Audit** | `analyze_gerbers.py` | **0 Findings (`Complete`)** | All `9/9` `.gbrjob` layers present, closed `68.0 × 20.0 mm` `Edge.Cuts` loop, aligned extents, `49` PTH vias (`0.30 mm`) + `4` `J1` PTH slots + `4` NPTH alignment holes |
+| **EMC Pre-Compliance** | `analyze_emc.py` | **`98.5 / 100` (`0` Errors)** | Single unbroken `B.Cu` solid `GND` plane (`1` connected island), `VREF` guard trace around `IN_POS`, dual parallel ESD ground vias at `D1`, companion return-current `GND` vias |
 | **BOM & PCBA Export** | `bom_manager.py` + `translate_bom_pnp.py` | **100% Complete** | 20 BOM lines (19 LCSC SMT lines = 30 JLCPCB PCBA parts + 1 user-soldered Arduino Nano R4 `ABX00142`) |
 | **Fabrication Release Gate** | `fab_release_gate.py` | **`PASS`** | **`11 pass, 0 warn, 0 fail`** |
 
@@ -71,12 +71,13 @@ Every analog block verified in [`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc
 
 ## 4. Iterative Issues Caught & Fixed During `kicad-happy` Build
 
-Running `aklofas/kicad-happy` iteratively during board generation caught and resolved four real design/CAD issues prior to release:
+Running `aklofas/kicad-happy` and native KiCad 8/9 DRC checks iteratively caught and resolved five real design/CAD issues prior to release:
 
 1. **Nested Power Symbol S-Expressions in `.kicad_sch` (`NT-001`):** Initial schematic generation emitted `#PWR` symbols inside component `(symbol ...)` blocks, leaving `GND` and `+3V3_ANA` pins isolated. Separating top-level `pwr_blocks` eliminated all `11` `NT-001` single-pin net warnings.
 2. **Schematic ↔ PCB Unconnected Net Parity (`fab_release_gate` `consistency`):** Adding explicit KiCad `unconnected-(Ref-PadN)` net entries (`18..44`) for the 27 `no_connect` pins aligned schematic (`44`) and PCB (`44`) net counts 1:1.
 3. **Silkscreen-Over-Pad Violation on `SW1` (`SK-001`):** Relocating the `"EAR"` and `"MIC"` `F.SilkS` legends into the pad-free corridor at `Y = 15.05 mm` eliminated the `SK-001` DFM warning (`0` DFM warnings).
-4. **Board-Edge Depaneling Clearance & EMC Return Vias (`PM-002`, `RP-001`, `ES-002`):** Adjusting internal `0805`/`SOD-323` passives (`C3, C5, C9, C13, D1, R2, R5, R9`) to `≥ 1.05 mm` from `Edge.Cuts`, adding companion `GND` stitching vias (`≤ 0.96 mm`) next to signal layer transitions, and placing dual parallel ESD ground vias at `D1` raised the EMC pre-compliance score from `91.0` to **`97.0 / 100`**.
+4. **Board-Edge Depaneling Clearance & EMC Return Vias (`PM-002`, `RP-001`, `ES-002`):** Adjusting internal `0805`/`SOD-323` passives (`C3, C5, C9, C13, D1, R2, R5, R9`) to `≥ 1.05 mm` from `Edge.Cuts`, adding companion `GND` stitching vias (`≤ 0.96 mm`) next to signal layer transitions, and placing dual parallel ESD ground vias at `D1` raised the EMC pre-compliance score to **`98.5 / 100`**.
+5. **Left-Rail Keepout Clearance (`A1`) & Unbroken `B.Cu` `GND` Perimeter Highway (`0` KiCad DRC Errors):** Resizing the left-edge snap-fit lip keepouts to `2.5 × 0.95 mm` (`Y = 0.00..0.95` and `Y = 19.05..20.00`) kept them strictly outside `A1`'s `18.0 mm` module courtyard (`Y = 1.03..18.97 mm`), while rotating `C13` by `180°` and enforcing a `≥ 1.25 mm` `B.Cu` trace/via edge margin eliminated an isolated top-border `GND` pocket near `X = 44 mm` (`1` single continuous `B.Cu` `GND` island).
 
 ---
 
@@ -88,7 +89,7 @@ Running `aklofas/kicad-happy` iteratively during board generation caught and res
 | `schematic` | `DS-002` | Warning | `No datasheets directory found (31/31 parts have MPNs)` | Local PDF mirror cache (`datasheets/`) is optional; all 31 BOM parts carry live manufacturer/LCSC datasheet URLs in `.kicad_sch`. |
 | `pcb` | `PM-002` | Error / Warning | `J1 courtyard overhangs by 2.1mm`, `SW1 overhangs by 1.15mm`, `A1 is 0.5mm from edge` | **Intentional by mechanical design:** `J1` (`PJ-320A` threaded barrel), `SW1` (`PCM12SMTR` external side actuator), and `A1` (Arduino Nano R4 USB-C receptacle) are edge-mounted user interfaces designed to protrude into the 3D-printed enclosure apertures. All internal passives have `≥ 1.05 mm` edge clearance. |
 | `pcb` | `TE-001` | Warning | `Test point coverage: 5/41 nets` | All 6 critical analog/power nodes (`VIN_RAW`, `OUT_PRE`, `OUT_HPF`, `ADC_IN`, `VREF`, `GND`) have dedicated `1.2 mm` SMD scope pads (`TP1–TP6`); the remaining count includes 27 intentional `no_connect` Nano R4 header pins. |
-| `emc` | `GP-001` / `RP-001` | Warning / Info | Partial reference plane gap on short `B.Cu` underpasses | Short `2–4 mm` `B.Cu` jumpers cross under `F.Cu` buses on a 2-layer stackup; at `5–45 Hz` cardiac frequencies (`λ > 6,000 km`), loop inductance of a `3 mm` underpass is electromagnetically negligible, and 31 `GND` stitching vias clamp high-frequency return currents (`EMC score = 97.0/100`). |
+| `emc` | `GP-001` / `RP-001` | Warning / Info | Partial reference plane gap on short `B.Cu` underpasses | Short `2–4 mm` `B.Cu` jumpers cross under `F.Cu` buses on a 2-layer stackup; at `5–45 Hz` cardiac frequencies (`λ > 6,000 km`), loop inductance of a `3 mm` underpass is electromagnetically negligible, and 28 `GND` stitching vias clamp high-frequency return currents (`EMC score = 98.5/100`). |
 | `thermal` / `lifecycle` | `SKIP` / `LC-007` | Info | Thermal datasheet cache & distributor API lifecycle query not run | Analytical thermal calculation confirms total board analog dissipation is `< 26 mW` (`U3` LDO = `9.9 mW`, `ΔT < 2.5 °C`). Online distributor API keys (`DIGIKEY_CLIENT_ID` / `MOUSER_SEARCH_API_KEY`) were not used; all 19 PCBA parts use active standard LCSC catalog numbers. |
 
 ---
