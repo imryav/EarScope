@@ -3,18 +3,18 @@
     "GenerationSoftware": {
       "Vendor": "KiCad",
       "Application": "Pcbnew",
-      "Version": "8.0.6"
+      "Version": "10.0"
     },
-    "CreationDate": "2026-11-12T20:00:00+00:00"
+    "CreationDate": "2026-11-18T12:00:00+00:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
-      "Name": "EarScope_NanoR4",
-      "GUID": "45617253-636f-4706-955f-4e616e6f5234",
-      "Revision": "1.0"
+      "Name": "EarScope_XIAO_RA4M1",
+      "GUID": "45617253-636f-4706-955f-5849414f5234",
+      "Revision": "2.0"
     },
     "Size": {
-      "X": 68.0,
+      "X": 48.0,
       "Y": 20.0
     },
     "LayerNumber": 2,
@@ -34,47 +34,47 @@
   ],
   "FilesAttributes": [
     {
-      "Path": "EarScope_NanoR4-F_Cu.gbr",
+      "Path": "EarScope_XIAO_RA4M1-F_Cu.gbr",
       "FileFunction": "Copper,L1,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-B_Cu.gbr",
+      "Path": "EarScope_XIAO_RA4M1-B_Cu.gbr",
       "FileFunction": "Copper,L2,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-F_Paste.gbr",
+      "Path": "EarScope_XIAO_RA4M1-F_Paste.gbr",
       "FileFunction": "Paste,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-B_Paste.gbr",
+      "Path": "EarScope_XIAO_RA4M1-B_Paste.gbr",
       "FileFunction": "Paste,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-F_Silkscreen.gbr",
+      "Path": "EarScope_XIAO_RA4M1-F_Silkscreen.gbr",
       "FileFunction": "Legend,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-B_Silkscreen.gbr",
+      "Path": "EarScope_XIAO_RA4M1-B_Silkscreen.gbr",
       "FileFunction": "Legend,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "EarScope_NanoR4-F_Mask.gbr",
+      "Path": "EarScope_XIAO_RA4M1-F_Mask.gbr",
       "FileFunction": "Soldermask,Top",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "EarScope_NanoR4-B_Mask.gbr",
+      "Path": "EarScope_XIAO_RA4M1-B_Mask.gbr",
       "FileFunction": "Soldermask,Bot",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "EarScope_NanoR4-Edge_Cuts.gbr",
+      "Path": "EarScope_XIAO_RA4M1-Edge_Cuts.gbr",
       "FileFunction": "Profile,NP",
       "FilePolarity": "Positive"
     }
@@ -102,7 +102,8 @@
       "Type": "Dielectric",
       "Thickness": 1.51,
       "Material": "FR4",
-      "Name": "F.Cu/B.Cu"
+      "Name": "F.Cu/B.Cu",
+      "Notes": "Type: dielectric layer 1 (from F.Cu to B.Cu)"
     },
     {
       "Type": "Copper",

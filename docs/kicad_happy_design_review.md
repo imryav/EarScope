@@ -1,106 +1,88 @@
-# EarScope Nano R4 — `kicad-happy` Automated Hardware Design Review & Release Gate
+# EarScope XIAO RA4M1 (`Rev 2.0`) — `kicad-happy` Automated Hardware Design Review & Release Gate
 
-**Project:** EarScope In-Ear Bio-Acoustic Cardiac Monitor (`5 Hz – 45 Hz` AFE + Arduino Nano R4 `ABX00142`)  
-**KiCad Project Directory:** [`hardware_pcb/EarScope_NanoR4/`](../hardware_pcb/EarScope_NanoR4/)  
-**Turnkey Fabrication Package:** [`fabrication_files/`](../fabrication_files/) (`EarScope_NanoR4_Gerbers_JLCPCB.zip`, `gerbers/`, `EarScope_JLCPCB_BOM.csv`, `EarScope_JLCPCB_CPL.csv`)  
-**Audit Suite:** [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (Schematic, Full Copper-Graph PCB, Cross-Analysis, Gerber/Excellon CAM, EMC Pre-Compliance, BOM/JLCPCB Translator, and Fabrication Release Gate)  
-**Release Gate Verdict:** **`PASS — Ready for fabrication` (`11 pass / 0 warn / 0 fail`, EMC Score `98.5 / 100`)**
+**Project:** EarScope In-Ear Bio-Acoustic Cardiac Monitor (`5 Hz – 45 Hz` AFE + `1.58 kHz` USB Power LPF + `JP1` Solder Jumper + Seeed Studio XIAO RA4M1 `102010551`)  
+**KiCad Project Directory:** [`hardware_pcb/EarScope_XIAO_RA4M1/`](../hardware_pcb/EarScope_XIAO_RA4M1/)  
+**Turnkey Fabrication Package:** [`fabrication_files/`](../fabrication_files/) (`EarScope_XIAO_RA4M1_Gerbers_JLCPCB.zip`, `gerbers/`, `EarScope_JLCPCB_BOM.csv`, `EarScope_JLCPCB_CPL.csv`)  
+**Audit Suite:** [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (Schematic, Full Copper-Graph PCB, Cross-Analysis, Gerber/Excellon CAM, EMC Pre-Compliance, Pairwise Geometric DRC, and Strict Fabrication Release Gate)  
+**Release Gate Verdict:** **`PASS — Ready for fabrication` (`fab_release_gate.py --strict`: `11 pass / 0 warn / 0 fail`, EMC Score `100 / 100`)**
 
 ---
 
 ## 1. Executive Summary & Routed PCB Preview
 
-The production **EarScope Carrier PCB** (`68.0 × 20.0 × 1.6 mm`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project with complete RS-274X Gerbers + Excellon drill outputs and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) and native KiCad 8/9 DRC rules (`0` DRC errors).
+The `Rev 2.0` production **EarScope Carrier PCB** (`48.0 × 20.0 × 1.6 mm`, `-29.4%` area reduction vs. `Rev 1.0`, 2-layer FR4, single-sided top assembly) has been generated as a native KiCad 8/9 project with complete RS-274X (X2) Gerbers + Excellon drill outputs (including routed oval slots for `J1`) and verified end-to-end against [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) (`--strict`) and exhaustive pairwise geometric DRC (`0` violations).
 
-![EarScope Nano R4 Routed 2-Layer PCB](figures/earscope_routed_pcb.svg)
+![EarScope XIAO RA4M1 Routed 2-Layer PCB](figures/earscope_routed_pcb.svg)
 
-| Audit Stage | Analyzer Script | Result | Key Metrics |
+| Audit Stage | Analyzer Script | Result | Key Metrics (`Rev 2.0`) |
 | :--- | :--- | :--- | :--- |
-| **Schematic Audit** | `analyze_schematic.py` | **0 Errors** | 37 placeable footprints (31 BOM parts + 6 SMD test points), 44 nets, 100% MPN & datasheet URL coverage |
-| **PCB Layout & Copper Graph** | `analyze_pcb.py --full` | **100% Routed** | `17/17` multi-pad nets routed (`44/44` total net parity), `0` unrouted nets, `0` courtyard/keepout overlaps, `338` segments (`388.62 mm`), `49` vias (`28` `GND` stitching vias) |
-| **Schematic ↔ PCB Parity** | `cross_analysis.py` | **0 Errors / 0 Warnings** | 1:1 component, footprint, pin-to-pad, and net synchronization |
-| **DFM Capability** | `analyze_pcb.py` (`dfm`) | **Standard Tier (`0` Violations)** | Min track `0.25 mm`, min drill `0.30 mm`, min annular ring `0.15 mm`, approx min spacing `0.475 mm` (fits cheapest JLCPCB 2-layer standard pool) |
-| **Gerber & Drill CAM Audit** | `analyze_gerbers.py` | **0 Findings (`Complete`)** | All `9/9` `.gbrjob` layers present, closed `68.0 × 20.0 mm` `Edge.Cuts` loop, aligned extents, `49` PTH vias (`0.30 mm`) + `4` `J1` PTH slots + `4` NPTH alignment holes |
-| **EMC Pre-Compliance** | `analyze_emc.py` | **`98.5 / 100` (`0` Errors)** | Single unbroken `B.Cu` solid `GND` plane (`1` connected island), `VREF` guard trace around `IN_POS`, dual parallel ESD ground vias at `D1`, companion return-current `GND` vias |
-| **BOM & PCBA Export** | `bom_manager.py` + `translate_bom_pnp.py` | **100% Complete** | 20 BOM lines (19 LCSC SMT lines = 30 JLCPCB PCBA parts + 1 user-soldered Arduino Nano R4 `ABX00142`) |
-| **Fabrication Release Gate** | `fab_release_gate.py` | **`PASS`** | **`11 pass, 0 warn, 0 fail`** |
+| **Schematic Audit** | `analyze_schematic.py` | **0 Errors / 0 Warnings** | `38` PCB footprints (`31` BOM parts + `JP1` solder jumper + `TP1–TP6`), `0` unconnected/single-pin nets, `31/31` MPN & footprint coverage |
+| **PCB Layout & Copper Graph** | `analyze_pcb.py --full` | **100% Routed** | `30/30` PCB nets routed (`unrouted_count: 0`), `0` courtyard/keepout violations, `262` segments, `33` vias (`17` `GND` stitching vias), `Keepout_XIAO_Underside_Pads` verified clear |
+| **Pairwise Geometric DRC** | `drc_check.py` | **0 Violations** | Exhaustive check across all `99` pads, `262` segments, `33` vias, `38` courtyards, `5` keepout zones, and `48.0 × 20.0 mm` `Edge.Cuts` |
+| **Schematic ↔ PCB Parity** | `cross_analysis.py` | **0 Total Findings** | `0` error, `0` warning, `0` info — exact 1:1 component, footprint, pin-to-pad, and net synchronization |
+| **DFM Capability** | `analyze_pcb.py` (`dfm`) | **Standard Tier (`0` Violations)** | Min track `0.25 mm`, min drill `0.30 mm`, min annular ring `0.15 mm` (fits lowest-cost `$2` JLCPCB 2-layer pool) |
+| **Gerber & Drill CAM Audit** | `analyze_gerbers.py` | **0 Findings (`Complete`)** | All `9/9` `.gbrjob` layers present, closed `48.0 × 20.0 mm` `Edge.Cuts` loop, `33` PTH vias + `4` routed `0.6 × 1.5 mm` `J1` oval slots + `2` NPTH holes |
+| **EMC Pre-Compliance** | `analyze_emc.py` | **`100 / 100` (`0` Errors, `0` Warnings)** | Unbroken `B.Cu` solid `GND` plane, `1.58 kHz` USB pre-LDO LPF (`R13 + C9 || C13`), zero-crossing North/South barrier (`> 10.6 mm` `+5V_USB` ↔ `/ADC_IN` separation), `VREF` guard ring, `D1` ESD clamp |
+| **BOM & PCBA Export** | `EarScope_JLCPCB_BOM/CPL.csv` | **100% Complete** | `19` LCSC SMT lines (`30` PCBA parts, incl. `R13 = 10R` JLCPCB Basic `C17415`; `A1` XIAO RA4M1 hand-soldered; `JP1` bare copper) |
+| **Strict Fabrication Gate** | `fab_release_gate.py --strict` | **`PASS`** | **`11 pass, 0 warn, 0 fail`** |
 
 ---
 
-## 2. Power Tree & Ratiometric Analog Architecture
+## 2. Two-Stage Filtered Power Tree & Analog Architecture
 
+```text
+USB-C Host Power (via Seeed Studio XIAO RA4M1 Pad 14 [5V])
+ └── +5V_USB (5.0 V, PWR_FLAG #FLG01)
+      └── R13 (10 Ω 1% 0805, LCSC C17415 Basic — Pre-LDO Power-Supply Noise LPF)
+           └── +5V_FILT (PWR_FLAG #FLG02, fc = 1.576 kHz, ~56 dB rejection @ 1 MHz)
+                ├── C9  (10 µF 25V X5R 0805 bulk LPF capacitor)
+                ├── C13 (100 nF 50V X7R 0805 low-ESL HF LPF bypass capacitor)
+                └── U3: Microchip MCP1700T-3302E/TT (250 mA Low-Noise LDO, Iq = 1.6 µA)
+                     └── +3V3_ANA (3.300 V ultra-quiet analog island supply)
+                          ├── C10 (10 µF 25V X5R 0805 LDO output stability capacitor)
+                          ├── U1: TI OPA2365AIDR #1 (+ C11 = 100 nF local bypass, < 2 mm from Pin 8)
+                          ├── U2: TI OPA2365AIDR #2 (+ C12 = 100 nF local bypass, < 2 mm from Pin 8)
+                          ├── R5 / R6 (100 kΩ / 100 kΩ 1%) + C8 (10 µF) -> U2B VREF Buffer (1.650 V)
+                          └── JP1 (SolderJumper_2_Open: OPEN = EAR, BRIDGE = MIC) -> R12 (2.2 kΩ) -> VIN_RAW
 ```
-USB-C Host Power (via Arduino Nano R4 Pin 27)
- └── +5V_USB (5.0 V, PWR_FLAG)
-      ├── C9 (10 µF X5R 0805 input bulk capacitor)
-      └── U3: Microchip MCP1700T-3302E/TT (250 mA Low-Noise LDO, Iq = 1.6 µA)
-           └── +3V3_ANA (3.300 V ultra-quiet analog supply & ratiometric ADC reference)
-                ├── C10 (10 µF X5R 0805 LDO output stability capacitor)
-                ├── U1: TI OPA2365AIDR #1 (+ C11 = 100 nF local bypass, 1.9 mm from Pin 8)
-                ├── U2: TI OPA2365AIDR #2 (+ C12 = 100 nF local bypass, 1.9 mm from Pin 8)
-                ├── R5 / R6 (100 kΩ / 100 kΩ 1%) + C8 (10 µF, fc = 0.16 Hz) -> U2B VREF Buffer (1.650 V)
-                ├── SW1 (PCM12SMTR, MIC position) -> R12 (2.2 kΩ) -> VIN_RAW (electret JFET bias)
-                └── A1 Pin 18 (AREF + C13 = 100 nF) -> Renesas RA4M1 14-bit SAR ADC external reference
-```
 
-- **Total Analog Supply Current (`+3V3_ANA`):** `~4.8 mA` in `EAR` mode (`U1` + `U2` + `VREF` divider) and `~5.8 mA` in `MIC` mode (`+1.0 mA` electret capsule bias).
-- **U3 LDO Thermal Dissipation:** `(5.0 V - 3.3 V) × 5.8 mA = 9.9 mW` (`ΔT < 2.5 °C` in `SOT-23-3`).
+* **Total Analog Supply Current (`+3V3_ANA`):** `~4.8 mA` in `EAR` mode (`JP1` open) and `~5.8 mA` in `MIC` mode (`JP1` bridged).
+* **DC Drop Across `R13 = 10 Ω`:** `58 mV` at `5.8 mA` (`< 0.19 V` worst-case transient), keeping `+5V_FILT` `> 1.3 V` above `U3`'s `3.48 V` dropout voltage while attenuating `100 kHz – 2 MHz` USB buck converter ripple before it reaches `U3`.
+* **XIAO RA4M1 14-Bit ADC Interface:** `A1` Pad `2` (`D1/A1`, `P000/AN000`) samples `/ADC_IN` (`0.000 – 3.300 V`, quiescent `1.650 V` = code `8192`) referenced to XIAO RA4M1's internal `3.3 V` `AVCC0`/`VREFH0` rail (`analogReadResolution(14)`).
 
 ---
 
-## 3. Subcircuit Verification (Schematic vs. LTspice Baseline)
+## 3. Subcircuit Verification (`Rev 2.0` Hardware Updates)
 
-Every analog block verified in [`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc) is preserved 1:1 in [`EarScope_NanoR4.kicad_sch`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_sch):
-
-1. **Direct Jumper-Free `PJ-320A` (`J1`) + External `EAR / MIC` Slide Switch (`SW1`) + ESD Clamp (`D1`):**
-   - `J1` (`PJ-320A`): `Pad 2 (Tip) -> VIN_RAW`, `Pad 3 (Ring 1) -> NC`, `Pad 1 (Sleeve) + Pad 4 (Ring 2) -> GND`.
-   - `D1` (`PESD3V3L1BA`, `SOD-323`, `25 pF`, `< 10 nA` leakage): Bidirectional `±30 kV` IEC 61000-4-2 ESD protection placed adjacent to `J1` with two parallel `GND` vias (`ES-002` compliant). At `45 Hz`, `25 pF` represents `141 MΩ` (`0.000 dB` passband perturbation), while any sub-`10 nA` DC leakage is blocked ahead of `C1`.
-   - `SW1` (`C&K PCM12SMTR`): Switches only the low-impedance `+3V3_ANA` rail upstream of `R12 = 2.2 kΩ` (`Pad 1 = NC [EAR]`, `Pad 2 = SW_BIAS`, `Pad 3 = +3V3_ANA [MIC]`), with all four `SH` mechanical shell tabs tied directly to `GND` to prevent finger-touch `50/60 Hz` hum.
-2. **Input Breathing High-Pass Pre-Filter (`C1`, `R1`):**
-   - `C1 = 68 nF` + `R1 = 1 MΩ` to `VREF` (`f_c = 2.34 Hz`), attenuating `< 0.5 Hz` ear-canal occlusion / breathing pressure waves before Stage 1 amplification.
-3. **Stage 1 Low-Noise Non-Inverting Preamplifier (`U1A` `OPA2365`):**
-   - `R2 = 220 Ω` to `VREF`, `R4 = 100 kΩ` feedback (`Gain = 455.5 V/V = 53.17 dB`), `C2 = 1 nF C0G/NP0` across `R4` (`f_LPF = 1.59 kHz` RF/EMI roll-off).
-4. **Stage 2 Unity-Gain 2nd-Order Butterworth High-Pass Filter (`U1B` `OPA2365`, `f_c = 4.99 Hz`):**
-   - `C3 = 1 µF`, `C4 = 1 µF`, `R7 = 22.6 kΩ`, `R8 = 45.3 kΩ` (`R8 -> VREF`).
-5. **Stage 3 Unity-Gain 2nd-Order Butterworth Low-Pass Filter (`U2A` `OPA2365`, `f_c = 45.1 Hz`):**
-   - `R9 = 24.9 kΩ`, `R10 = 24.9 kΩ`, `C5 = 200 nF`, `C6 = 100 nF` (`C6 -> VREF`).
-6. **14-Bit SAR ADC Anti-Kickback Charge Reservoir (`R11`, `C7`):**
-   - `R11 = 100 Ω`, `C7 = 100 nF` (`C7 -> GND`, `f_c = 15.9 kHz`) driving `A1` Pin 20 (`A1 / P000 AN000`).
+1. **`JP1` 2-Pad SMD Solder Jumper Replacing `SW1` (`EAR / MIC`):**
+   * `JP1` (`SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm` at `(41.80, 17.80) mm`) sits on the low-impedance `+3V3_ANA` side of `R12 = 2.2 kΩ`, with `F.Paste` omitted so boards arrive open (`EAR` mode, `0 V` DC) and can be bridged with a solder droplet for electret microphones (`MIC` mode).
+2. **`1.58 kHz` USB Power-Supply Noise LPF (`R13`, `C9 || C13`):**
+   * `R13 = 10 Ω` (`UNI-ROYAL 0805W8F100JT5E`, LCSC `C17415` Basic) + `C9 = 10 µF` (`C15850`) || `C13 = 100 nF` (`C49678`) on `+5V_FILT` ahead of `U3` (`MCP1700T-3302E/TT`), verified in both [`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc) and [`EarScope_SPICE_Sim.kicad_sch`](../hardware_pcb/EarScope_SPICE_Sim/EarScope_SPICE_Sim.kicad_sch).
+3. **`Seeed Studio XIAO RA4M1` (`A1`) & Underside Belly-Pad Protection:**
+   * Placed flush at `(10.54, 10.00, 180°)` on 14 extended castellated SMD pads (`2.0 × 1.6 mm`).
+   * `Keepout_XIAO_Underside_Pads` (`[0.95..16.90] × [4.00..16.10] mm`) enforces zero `F.Cu` copper and zero vias underneath all 16 exposed underside pads (including `BAT+/BAT-` and SWD).
+4. **Preserved Cardiac AFE Chain (`5–45 Hz`):**
+   * `J1` (`PJ-320A`) + `D1` (`PESD3V3L1BA` ESD clamp) $\rightarrow$ `C1 = 68 nF` / `R1 = 1 MΩ` (`2.34 Hz` breathing pre-filter with active `VREF` guard ring) $\rightarrow$ `U1A` (`×455.5` / `53.2 dB` preamp, `R2 = 220 Ω`, `R4 = 100 kΩ`, `C2 = 1 nF`) $\rightarrow$ `U1B` (`5 Hz` Sallen-Key HPF) $\rightarrow$ `U2A` (`45 Hz` Sallen-Key LPF) $\rightarrow$ `R11 = 100 Ω` + `C7 = 100 nF` SAR ADC anti-kickback filter $\rightarrow$ `A1` Pad `2` (`D1/A1`).
 
 ---
 
-## 4. Iterative Issues Caught & Fixed During `kicad-happy` Build
+## 4. Iterative Issues Caught & Fixed During `Rev 2.0` Build
 
-Running `aklofas/kicad-happy` and native KiCad 8/9 DRC checks iteratively caught and resolved five real design/CAD issues prior to release:
-
-1. **Nested Power Symbol S-Expressions in `.kicad_sch` (`NT-001`):** Initial schematic generation emitted `#PWR` symbols inside component `(symbol ...)` blocks, leaving `GND` and `+3V3_ANA` pins isolated. Separating top-level `pwr_blocks` eliminated all `11` `NT-001` single-pin net warnings.
-2. **Schematic ↔ PCB Unconnected Net Parity (`fab_release_gate` `consistency`):** Adding explicit KiCad `unconnected-(Ref-PadN)` net entries (`18..44`) for the 27 `no_connect` pins aligned schematic (`44`) and PCB (`44`) net counts 1:1.
-3. **Silkscreen-Over-Pad Violation on `SW1` (`SK-001`):** Relocating the `"EAR"` and `"MIC"` `F.SilkS` legends into the pad-free corridor at `Y = 15.05 mm` eliminated the `SK-001` DFM warning (`0` DFM warnings).
-4. **Board-Edge Depaneling Clearance & EMC Return Vias (`PM-002`, `RP-001`, `ES-002`):** Adjusting internal `0805`/`SOD-323` passives (`C3, C5, C9, C13, D1, R2, R5, R9`) to `≥ 1.05 mm` from `Edge.Cuts`, adding companion `GND` stitching vias (`≤ 0.96 mm`) next to signal layer transitions, and placing dual parallel ESD ground vias at `D1` raised the EMC pre-compliance score to **`98.5 / 100`**.
-5. **Left-Rail Keepout Clearance (`A1`) & Unbroken `B.Cu` `GND` Perimeter Highway (`0` KiCad DRC Errors):** Resizing the left-edge snap-fit lip keepouts to `2.5 × 0.95 mm` (`Y = 0.00..0.95` and `Y = 19.05..20.00`) kept them strictly outside `A1`'s `18.0 mm` module courtyard (`Y = 1.03..18.97 mm`), while rotating `C13` by `180°` and enforcing a `≥ 1.25 mm` `B.Cu` trace/via edge margin eliminated an isolated top-border `GND` pocket near `X = 44 mm` (`1` single continuous `B.Cu` `GND` island).
+1. **`power_pin_not_driven` ERC Warning on `+5V_FILT`:** Adding series LPF resistor `R13` decoupled `+5V_FILT` from `+5V_USB`'s `PWR_FLAG` (`#FLG01`), flagging `U3` Pin 3 (`power_in`). Resolved by placing `#FLG02` (`power:PWR_FLAG`) on `+5V_FILT` (`0` ERC warnings).
+2. **North/South Barrier Column Ordering (`+5V_USB` vs. `/ADC_IN` Crossing):** Placing `R13/U3` at the top (`Y = 2.15..12.00 mm`) and `R11/C7/TP4/TP6` at the bottom (`Y = 14.05..18.00 mm`) aligned `+5V_USB` directly with `A1` Pad `14` `(2.92, 1.75)` and `/ADC_IN` directly with `A1` Pad `2` `(5.46, 18.25)`, eliminating trace crossings and vias on both nets and boosting the EMC pre-compliance score to **`100 / 100`**.
+3. **West Rail Keepout & `TP4` Courtyard Clearance:** Adjusting West snap-fit rail keepouts to `0..0.60 mm` / `19.40..20.0 mm` and nudging `TP4` to `(21.95, 18.00)` cleared `A1`'s courtyard with `0` geometric DRC violations.
+4. **Excellon Oval Slot Generation for `J1` (`PJ-320A`):** Updated `PTH.drl` CAM output to emit routed `G00 / M15 / G01 / M16 / G05` Excellon slot paths for `J1`'s four `0.60 × 1.50 mm` oval PTH terminals, passing `analyze_gerbers.py` and `fab_release_gate.py --strict` (`11/11 PASS`).
 
 ---
 
-## 5. Disposition of Remaining Informational / Heuristic Findings
+## 5. Generated Project & Manufacturing Files
 
-| Analyzer | Rule ID | Severity | Finding Summary | Engineering Disposition |
-| :--- | :--- | :--- | :--- | :--- |
-| `schematic` | `RS-001` | Warning (Heuristic) | `VIN_RAW has no declared source` | **Benign false positive:** `VIN_RAW` matches the `VIN*` power-rail naming heuristic, but in `AFE_Cardiac_5-45Hz.asc` it is the AC transducer signal node from `J1` (`Tip`), not a DC supply rail. Adding `PWR_FLAG` to an analog input net would mask real ERC checks. |
-| `schematic` | `DS-002` | Warning | `No datasheets directory found (31/31 parts have MPNs)` | Local PDF mirror cache (`datasheets/`) is optional; all 31 BOM parts carry live manufacturer/LCSC datasheet URLs in `.kicad_sch`. |
-| `pcb` | `PM-002` | Error / Warning | `J1 courtyard overhangs by 2.1mm`, `SW1 overhangs by 1.15mm`, `A1 is 0.5mm from edge` | **Intentional by mechanical design:** `J1` (`PJ-320A` threaded barrel), `SW1` (`PCM12SMTR` external side actuator), and `A1` (Arduino Nano R4 USB-C receptacle) are edge-mounted user interfaces designed to protrude into the 3D-printed enclosure apertures. All internal passives have `≥ 1.05 mm` edge clearance. |
-| `pcb` | `TE-001` | Warning | `Test point coverage: 5/41 nets` | All 6 critical analog/power nodes (`VIN_RAW`, `OUT_PRE`, `OUT_HPF`, `ADC_IN`, `VREF`, `GND`) have dedicated `1.2 mm` SMD scope pads (`TP1–TP6`); the remaining count includes 27 intentional `no_connect` Nano R4 header pins. |
-| `emc` | `GP-001` / `RP-001` | Warning / Info | Partial reference plane gap on short `B.Cu` underpasses | Short `2–4 mm` `B.Cu` jumpers cross under `F.Cu` buses on a 2-layer stackup; at `5–45 Hz` cardiac frequencies (`λ > 6,000 km`), loop inductance of a `3 mm` underpass is electromagnetically negligible, and 28 `GND` stitching vias clamp high-frequency return currents (`EMC score = 98.5/100`). |
-| `thermal` / `lifecycle` | `SKIP` / `LC-007` | Info | Thermal datasheet cache & distributor API lifecycle query not run | Analytical thermal calculation confirms total board analog dissipation is `< 26 mW` (`U3` LDO = `9.9 mW`, `ΔT < 2.5 °C`). Online distributor API keys (`DIGIKEY_CLIENT_ID` / `MOUSER_SEARCH_API_KEY`) were not used; all 19 PCBA parts use active standard LCSC catalog numbers. |
-
----
-
-## 6. Generated Project & Manufacturing Files
-
-- **KiCad 8/9 Project:** [`EarScope_NanoR4.kicad_pro`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_pro)
-- **Complete Wired Schematic:** [`EarScope_NanoR4.kicad_sch`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_sch)
-- **Routed 2-Layer PCB (`68.0 × 20.0 mm`):** [`EarScope_NanoR4.kicad_pcb`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_pcb)
-- **Custom Footprint Library (`.pretty`):** [`EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/) + [`fp-lib-table`](../hardware_pcb/EarScope_NanoR4/fp-lib-table)
-- **Master Engineering BOM (All 20 Lines / 31 Parts):** [`EarScope_Master_BOM.csv`](../hardware_pcb/EarScope_NanoR4/bom/EarScope_Master_BOM.csv)
-- **JLCPCB Turnkey PCBA Upload Files (30 Parts, `A1` Excluded for User Soldering):**
-  - [`EarScope_JLCPCB_BOM.csv`](../hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_BOM.csv)
-  - [`EarScope_JLCPCB_CPL.csv`](../hardware_pcb/EarScope_NanoR4/bom/EarScope_JLCPCB_CPL.csv)
+* **KiCad 8/9 Project:** [`EarScope_XIAO_RA4M1.kicad_pro`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_pro)
+* **Complete Wired Schematic (`Rev 2.0`):** [`EarScope_XIAO_RA4M1.kicad_sch`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_sch)
+* **Routed 2-Layer PCB (`48.0 × 20.0 mm`):** [`EarScope_XIAO_RA4M1.kicad_pcb`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_pcb)
+* **Custom Footprint Library (`.pretty`):** [`EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_Footprints.pretty/) + [`fp-lib-table`](../hardware_pcb/EarScope_XIAO_RA4M1/fp-lib-table)
+* **Master Engineering BOM (`31` BOM Parts):** [`EarScope_Master_BOM.csv`](../fabrication_files/EarScope_Master_BOM.csv)
+* **JLCPCB Turnkey PCBA Upload Files (`30` Populated Parts, `A1` Hand-Soldered, `JP1` Bare Copper):**
+  * [`EarScope_XIAO_RA4M1_Gerbers_JLCPCB.zip`](../fabrication_files/EarScope_XIAO_RA4M1_Gerbers_JLCPCB.zip)
+  * [`EarScope_JLCPCB_BOM.csv`](../fabrication_files/EarScope_JLCPCB_BOM.csv)
+  * [`EarScope_JLCPCB_CPL.csv`](../fabrication_files/EarScope_JLCPCB_CPL.csv)

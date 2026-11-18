@@ -1,0 +1,19 @@
+M48
+; DRILL file {EarScope_XIAO_RA4M1.kicad_pcb} date 2026-11-18T12:00:00+00:00
+; FORMAT={-:-/ absolute / metric / decimal}
+; #@! TF.GenerationSoftware,KiCad,Pcbnew,10.0
+; #@! TF.CreationDate,2026-11-18T12:00:00+00:00
+; #@! TF.ProjectId,EarScope_XIAO_RA4M1,45617253-636f-4706-955f-5849414f5234,2.0
+; #@! TF.FileFunction,NonPlated,1,2,NPTH
+FMAT,2
+METRIC
+; #@! TA.AperFunction,NonPlated,NPTH,ComponentDrill
+T1C0.800
+%
+G90
+G05
+T1
+X46.4000Y-8.8000
+X39.4000Y-8.8000
+T0
+M30
