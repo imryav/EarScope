@@ -507,7 +507,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "EarScope_NanoR4.kicad_pro",
+    "filename": "EarScope_XIAO_RA4M1.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -575,6 +575,10 @@
       {
         "netclass": "Power",
         "pattern": "+5V_USB"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/+5V_FILT"
       }
     ]
   },
@@ -714,8 +718,8 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "EarScope_NanoR4.kicad_sch",
-        "name": "EarScope_NanoR4",
+        "filename": "EarScope_XIAO_RA4M1.kicad_sch",
+        "name": "EarScope_XIAO_RA4M1",
         "uuid": "00000000-0000-0000-0000-000000000000"
       }
     ],

@@ -1,21 +1,21 @@
-# KiCad 8 / 9 Schematic & PCB Design Guide (Arduino Nano R4 Edition)
+# KiCad 8 / 9 Schematic & PCB Design Guide (Seeed Studio XIAO RA4M1 Edition — `Rev 2.0`)
 
 This guide provides a complete, step-by-step workflow to translate the validated LTspice schematic ([`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc)) into a production-ready **2-layer Mixed-Signal Carrier PCB** in **KiCad 8 / KiCad 9**, ready for fabrication at **JLCPCB** or **PCBWay** and mechanical integration in **Fusion 360**.
 
 > [!TIP]
-> **Ready-to-Manufacture KiCad 8 / 9 Project Included:** The complete project — schematic ([`EarScope_NanoR4.kicad_sch`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_sch)), `100%` routed 2-layer carrier PCB ([`EarScope_NanoR4.kicad_pcb`](../hardware_pcb/EarScope_NanoR4/EarScope_NanoR4.kicad_pcb)), custom footprint library ([`EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/)), and turnkey JLCPCB BOM/CPL files ([`bom/`](../hardware_pcb/EarScope_NanoR4/bom/)) — is already built and verified in [`hardware_pcb/EarScope_NanoR4/`](../hardware_pcb/EarScope_NanoR4/). See [`kicad_happy_design_review.md`](kicad_happy_design_review.md) for the full [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) **`PASS`** fabrication release gate report (`9/9` checks passed, `0` DFM violations, `97.0 / 100` EMC score).
+> **Ready-to-Manufacture KiCad 8 / 9 Project Included:** The complete `Rev 2.0` project — schematic ([`EarScope_XIAO_RA4M1.kicad_sch`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_sch)), `100%` routed `48.0 × 20.0 mm` 2-layer carrier PCB ([`EarScope_XIAO_RA4M1.kicad_pcb`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_pcb)), custom footprint library ([`EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_Footprints.pretty/)), and turnkey JLCPCB BOM/CPL files ([`bom/`](../hardware_pcb/EarScope_XIAO_RA4M1/bom/)) — is already built and verified in [`hardware_pcb/EarScope_XIAO_RA4M1/`](../hardware_pcb/EarScope_XIAO_RA4M1/). See [`kicad_happy_design_review.md`](kicad_happy_design_review.md) for the full [`aklofas/kicad-happy`](https://github.com/aklofas/kicad-happy) **`PASS`** strict fabrication release gate report (`11/11` checks passed, `0` DRC/DFM violations, `100 / 100` EMC score).
 
 ---
 
 ## 1. Board Architecture & Manufacturing Specifications
 
-To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz`) without paying for a 4-layer stackup, the carrier board uses a **co-planar 2-layer architecture** with strict physical separation between the `48 MHz` **Arduino Nano R4** digital domain and the `3.30 V` **OPA2365** analog island:
+To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz`) on an ultra-compact thumb-width 2-layer PCB, `Rev 2.0` uses a **co-planar 2-layer mixed-signal architecture** with strict physical isolation between the `48 MHz` **Seeed Studio XIAO RA4M1** digital domain, a central **USB Power LPF + LDO & ADC Anti-Aliasing Barrier Column**, and the quiet `3.30 V` **OPA2365** analog island:
 
-* **Board Dimensions (`Edge.Cuts`):** **`68.0 mm × 20.0 mm`**, `1.6 mm` standard FR-4 thickness (`1 oz` / `35 µm` copper).
+* **Board Dimensions (`Edge.Cuts`):** **`48.0 mm × 20.0 mm`** (`960 mm²`, `-29.4%` area vs. `Rev 1.0`), `1.6 mm` standard FR-4 thickness (`1 oz` / `35 µm` copper).
 * **Layer Stackup:**
-  * **`F.Cu` (Top Layer):** All SMD components, Arduino Nano R4 castellated flush mount, short analog signal traces, and a `VREF` active guard ring around the high-impedance preamp input.
-  * **`B.Cu` (Bottom Layer):** **100% continuous, unbroken `GND` copper pour** acting as an electromagnetic shield underneath both the AFE and the Nano R4.
-* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, `SOD-323` ESD diode, SMD `PJ-320A` jack, side-actuated `SW1` slide switch, and headerless castellated **Arduino Nano R4 `ABX00142`**) — easy to hand-solder or order via turnkey PCBA.
+  * **`F.Cu` (Top Layer):** All SMD components, Seeed Studio XIAO RA4M1 14-pad castellated flush mount (with strict `F.Cu`/via keepout under all 16 exposed underside belly pads), `1.58 kHz` USB pre-LDO RC LPF (`R13 + C9 || C13`), `JP1` 2-pad SMD solder jumper (`OPEN = EAR / BRIDGE = MIC`), short analog signal traces, and a `VREF` active guard ring around `U1A+`.
+  * **`B.Cu` (Bottom Layer):** **100% continuous, unbroken `GND` copper pour** acting as an electromagnetic shield underneath both the AFE and the XIAO RA4M1.
+* **Assembly Style:** Single-sided top assembly (`0805` passives, `SOIC-8` op-amps, `SOT-23-3` LDO, `SOD-323` ESD diode, `PJ-320A` jack, bare-copper `JP1` solder jumper, and headerless castellated **Seeed Studio XIAO RA4M1 `102010551`**) — easy to hand-solder or order via turnkey PCBA.
 
 ![EarScope KiCad 2-Layer Carrier PCB Floorplan](figures/kicad_pcb_floorplan.svg)
 
@@ -25,90 +25,93 @@ To achieve sub-microvolt analog noise immunity (`0.141 µVrms` across `5–45 Hz
 
 ## 2. Step 1 — KiCad Project Creation & Design Rules (`Board Setup`)
 
-1. Open KiCad (`8.0+` or `9.0+`) $\rightarrow$ **File $\rightarrow$ New Project** $\rightarrow$ save inside `hardware_pcb/EarScope_NanoR4`.
+1. Open KiCad (`8.0+` or `9.0+`) $\rightarrow$ **File $\rightarrow$ New Project** $\rightarrow$ save inside `hardware_pcb/EarScope_XIAO_RA4M1`.
 2. Open the PCB Editor (**`Pcbnew`**) $\rightarrow$ **File $\rightarrow$ Board Setup** and enter these fabrication-safe constraints (compatible with standard `$2` 2-layer rules at JLCPCB and PCBWay):
 
 | Parameter (`Design Rules -> Constraints`) | Recommended Setting | Notes |
 | :--- | :--- | :--- |
 | **Copper Layers** | `2` (`F.Cu`, `B.Cu`) | `1.6 mm` finished board thickness |
 | **Minimum Clearance** | **`0.20 mm`** (`8 mil`) | Generous margin over `0.127 mm` (`5 mil`) fab limit |
-| **Minimum Track Width** | **`0.20 mm`** (`8 mil`) | Safe yield across all fabs |
+| **Minimum Track Width** | **`0.20 mm`** (`8 mil`) | Minimum routed track in `Rev 2.0` is `0.25 mm` |
 | **Minimum Via Size / Drill** | **`0.60 mm` diameter / `0.30 mm` drill** | Standard cost-free via size |
 | **Copper to Edge Clearance** | **`0.30 mm`** | Prevents exposed copper during V-cut / routing |
 
-3. Under **Board Setup $\rightarrow$ Design Rules $\rightarrow$ Net Classes**, create three net classes:
+3. Under **Board Setup $\rightarrow$ Design Rules $\rightarrow$ Net Classes**, configure three net classes:
 
 | Net Class | Track Width | Clearance | Assigned Nets |
 | :--- | :---: | :---: | :--- |
 | **`Default` (Analog Signal)** | `0.25 mm` | `0.20 mm` | `VIN_RAW`, `OUT_PRE`, `HPF_MID`, `OUT_HPF`, `LPF_MID`, `OUT_LPF`, `ADC_IN` |
-| **`HighZ_Input`** | `0.25 mm` | **`0.35 mm`** | `IN_POS` (between `CIN`, `RBIAS`, and `U1` Pin 3) |
-| **`Power`** | **`0.50 mm`** | `0.25 mm` | `+5V_USB`, `+3V3_ANA` (`VCC_ANA` in SPICE), `VREF`, `GND` |
+| **`HighZ_Input`** | `0.25 mm` | **`0.35 mm`** | `IN_POS` (between `C1`, `R1`, and `U1` Pin 3) |
+| **`Power`** | **`0.35 – 0.50 mm`** | `0.25 mm` | `+5V_USB`, `+5V_FILT`, `+3V3_ANA`, `VREF`, `GND` |
 
 ---
 
 ## 3. Step 2 — LTspice-to-KiCad Component, Symbol & Footprint Mapping
 
-Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc) (plus `D1` ESD protection added for `IEC 61000-4-2` off-board AUX cable compliance). All symbols and footprints are bundled ready-to-use in [`hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_NanoR4/EarScope_Footprints.pretty/):
+Every component below maps 1-to-1 to [`docs/AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc). All footprints are bundled ready-to-use in [`hardware_pcb/EarScope_XIAO_RA4M1/EarScope_Footprints.pretty/`](../hardware_pcb/EarScope_XIAO_RA4M1/EarScope_Footprints.pretty/):
 
-| LTspice Name | KiCad Ref | Value / Part Number | Built-In KiCad Symbol | Built-In KiCad Footprint | LCSC Part # (Ref) |
+| LTspice Name | KiCad Ref | Value / Part Number | KiCad Symbol | KiCad Footprint (`EarScope_Footprints`) | LCSC Part # |
 | :--- | :---: | :--- | :--- | :--- | :---: |
-| `MCU` | **`A1`** | `Arduino Nano R4` (`ABX00142`) | `MCU_Module:Arduino_Nano_Every` *(or `Arduino_Nano_v3.x`)* | Custom Castellated copy of `Module:Arduino_Nano` *(Sec. 4.1)* | Official Arduino |
-| `U1` (`U1A, U1B`) | **`U1`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` *(or `LM358`)* | `Package_SO:SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
-| `U2` (`U2A, U2B`) | **`U2`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` *(or `LM358`)* | `Package_SO:SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
-| `VSUP` (LDO) | **`U3`** | `MCP1700T-3302E/TT` | `Regulator_Linear:MCP1700x-3302xx_SOT23` | `Package_TO_SOT_SMD:SOT-23` | `C39051` |
-| ESD Clamp | **`D1`** | `PESD3V3L1BA` (`3.3V` Bidirectional TVS) | `Device:D_TVS` | `Diode_SMD:D_SOD-323` (`SOD-323`) | `C15772` |
-| `VEAR` (Jack) | **`J1`** | `PJ-320A` (3.5mm TRRS) | `Connector_Audio:AudioJack4` | `PJ-320A` SMD 4-pad *(bundled in `.pretty`)* | `C95555` |
-| Bias Switch | **`SW1`** | `C&K PCM12SMTR` / `MSK12C02` (`EAR/MIC`) | `Switch:SW_SPDT` | `Button_Switch_SMD:SW_SPDT_PCM12` *(includes 3D STEP model)* | `C221836` |
-| `CIN` | **`C1`** | `68 nF` (`C0G/NP0` or `X7R`, `≥25V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1589` / `C0G` |
-| `C1` (`CF` in doc) | **`C2`** | `1 nF` (`C0G/NP0`, `50V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C1706` |
-| `C1H, C2H` | **`C3, C4`** | `1 µF` (`X7R`, `≥16V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C28323` |
-| `CAL` | **`C5`** | `200 nF` *(or two parallel `100 nF`)* | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C53438` |
-| `CBL` | **`C6`** | `100 nF` (`C0G` or `X7R` $\rightarrow$ **`VREF`**) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C49678` |
-| `COUT` | **`C7`** | `100 nF` (`C0G` or `X7R` $\rightarrow$ **`GND`**) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C49678` |
-| `CREF` | **`C8`** | `10 µF` (`X7R`, `≥10V` on `U2B+`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C15850` |
-| `CLDO_IN, CLDO_OUT` | **`C9, C10`** | `10 µF` (`X7R`, `≥10V`) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C15850` |
-| `CDEC1, CDEC2, CAREF` | **`C11–C13`** | `100 nF` (`X7R`, `50V` bypass) | `Device:C` | `Capacitor_SMD:C_0805_2012Metric` | `C49678` |
-| `RBIAS` | **`R1`** | `1 MΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17514` |
-| `RG` | **`R2`** | `220 Ω` (`1%`, selected gain) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17557` |
-| `RG_ALT` *(opt.)* | **`R3`** | `DNP` (`1 kΩ` / `100 Ω` parallel option) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | — |
-| `RF, RREF1, RREF2` | **`R4, R5, R6`** | `100 kΩ` (`1%` Thin Film) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17407` |
-| `RAH` | **`R7`** | `22.6 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C137927` |
-| `RBH` | **`R8`** | `45.3 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C138044` |
-| `R1L, R2L` | **`R9, R10`** | `24.9 kΩ` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C25962` |
-| `ROUT` | **`R11`** | `100 Ω` (`1%`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17408` |
-| `RMIC` | **`R12`** | `2.2 kΩ` (`1%`, switched via `SW1`) | `Device:R` | `Resistor_SMD:R_0805_2012Metric` | `C17520` |
-| Scope Test Pads | **`TP1–TP6`** | `1.2 mm` Flat SMD Test Points | `Connector:TestPoint` | `TestPoint:TestPoint_Pad_D1.2mm` | Copper Only |
+| `MCU` | **`A1`** | `Seeed Studio XIAO RA4M1` (`102010551`) | `MCU_Module:Seeed_XIAO_RA4M1` | `Seeed_XIAO_RA4M1_Castellated_SMD` *(Sec. 4.1)* | Seeed `102010551` |
+| `U1` (`U1A, U1B`) | **`U1`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` | `SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
+| `U2` (`U2A, U2B`) | **`U2`** | `OPA2365AIDR` | `Amplifier_Operational:OPA2365xD` | `SOIC-8_3.9x4.9mm_P1.27mm` | `C78566` |
+| `U3` (LDO) | **`U3`** | `MCP1700T-3302E/TT` | `Regulator_Linear:MCP1700x-3302xx_SOT23` | `SOT-23` | `C39051` |
+| ESD Clamp | **`D1`** | `PESD3V3L1BA` (`3.3V` Bidirectional TVS) | `Device:D_TVS` | `SOD-323` | `C15772` |
+| `VEAR` (Jack) | **`J1`** | `PJ-320A` (3.5mm TRRS) | `Connector_Audio:AudioJack4` | `TRRS-PJ-320A` | `C95555` |
+| Bias Jumper | **`JP1`** | `SolderJumper_2_Open` (`OPEN=EAR / BRIDGE=MIC`) | `Jumper:SolderJumper_2_Open` | `SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm` | Bare PCB Copper |
+| `R13` (USB LPF) | **`R13`** | `10 Ω` (`1%`, `0805W8F100JT5E`) | `Device:R` | `R_0805_2012Metric` | `C17415` (Basic) |
+| `C9` (USB LPF Bulk) | **`C9`** | `10 µF` (`25V`, `X5R/X7R`, `+5V_FILT`) | `Device:C` | `C_0805_2012Metric` | `C15850` |
+| `C13` (USB LPF HF) | **`C13`** | `100 nF` (`50V`, `X7R`, `+5V_FILT`) | `Device:C` | `C_0805_2012Metric` | `C49678` |
+| `C10` (LDO Out) | **`C10`** | `10 µF` (`25V`, `X5R/X7R`, `+3V3_ANA`) | `Device:C` | `C_0805_2012Metric` | `C15850` |
+| `CIN` | **`C1`** | `68 nF` (`50V`, `X7R`/`C0G`) | `Device:C` | `C_0805_2012Metric` | `C53085` |
+| `C1` (`CF` in doc) | **`C2`** | `1 nF` (`50V`, `C0G/NP0`) | `Device:C` | `C_0805_2012Metric` | `C1588` |
+| `C1H, C2H` | **`C3, C4`** | `1 µF` (`50V`, `X7R`) | `Device:C` | `C_0805_2012Metric` | `C28323` |
+| `CAL` | **`C5`** | `220 nF` / `200 nF` (`50V`, `X7R`) | `Device:C` | `C_0805_2012Metric` | `C315201` |
+| `CBL` | **`C6`** | `100 nF` (`50V`, `X7R` $\rightarrow$ **`VREF`**) | `Device:C` | `C_0805_2012Metric` | `C49678` |
+| `COUT` | **`C7`** | `100 nF` (`50V`, `X7R` $\rightarrow$ **`GND`**) | `Device:C` | `C_0805_2012Metric` | `C49678` |
+| `CREF` | **`C8`** | `10 µF` (`25V`, `X5R/X7R` on `U2B+`) | `Device:C` | `C_0805_2012Metric` | `C15850` |
+| `CDEC1, CDEC2` | **`C11, C12`** | `100 nF` (`50V`, `X7R` local op-amp bypass) | `Device:C` | `C_0805_2012Metric` | `C49678` |
+| `RBIAS` | **`R1`** | `1 MΩ` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C17514` |
+| `RG` | **`R2`** | `220 Ω` (`1%`, selected gain) | `Device:R` | `R_0805_2012Metric` | `C17557` |
+| `RG_ALT` *(opt.)* | **`R3`** | `DNP` (parallel gain-trim option) | `Device:R` | `R_0805_2012Metric` | — |
+| `RF, RREF1, RREF2` | **`R4, R5, R6`** | `100 kΩ` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C149504` |
+| `RAH` | **`R7`** | `22.6 kΩ` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C17562` |
+| `RBH` | **`R8`** | `45.3 kΩ` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C25900` |
+| `R1L, R2L` | **`R9, R10`** | `24.9 kΩ` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C17590` |
+| `ROUT` | **`R11`** | `100 Ω` (`1%`) | `Device:R` | `R_0805_2012Metric` | `C17407` |
+| `RMIC` | **`R12`** | `2.2 kΩ` (`1%`, switched via `JP1`) | `Device:R` | `R_0805_2012Metric` | `C17520` |
+| Scope Test Pads | **`TP1–TP6`** | `1.2 mm` Flat SMD Test Points | `Connector:TestPoint` | `TestPoint_Pad_D1.2mm` | Bare PCB Copper |
 
 ---
 
 ## 4. Step 3 — Critical Pinouts & Custom Footprint Details (Must Verify!)
 
-### 4.1 Converting `Module:Arduino_Nano` to a Flush Castellated SMD Footprint
-The **Arduino Nano R4 (`ABX00142`)** has a flat underside and castellated half-holes along both `15-pin` edges (`2.54 mm` pitch, `15.24 mm` row-to-row spacing). Modifying KiCad's standard footprint takes under 60 seconds and eliminates `~8.5 mm` of vertical header height while keeping your bottom `GND` plane `100%` unperforated:
+### 4.1 Flush Castellated `Seeed_XIAO_RA4M1_Castellated_SMD` Footprint & Underside Pad Keepout
+The **Seeed Studio XIAO RA4M1 (`102010551`)** measures **`21.0 × 17.8 mm`** with `2 × 7` (`14` total) castellated half-holes on a `2.54 mm` pitch and `15.24 mm` (`600 mil`) row-to-row spacing, **plus 16 exposed SMD pads on its bottom side** (`BAT+/BAT-`, SWD, RESET/BOOT, `D11–D18` / CAN). Flush-mounting it cleanly requires two key rules:
 
-1. Open **Footprint Editor** $\rightarrow$ search `Module:Arduino_Nano` $\rightarrow$ **File $\rightarrow$ Save Copy As** into a project library (`EarScope_Footprints.pretty`) named `Arduino_Nano_R4_Castellated_SMD`.
-2. Delete the 4 corner mounting holes (if present in the template) so the footprint fits cleanly within `45.0 × 18.0 mm`.
-3. Select **all 30 numbered pads (`1` through `30`)** $\rightarrow$ press **`E`** (Properties):
-   * **Pad Type:** Change from `Through-hole` to **`SMD`**.
-   * **Pad Shape:** `Rounded Rectangle` (`Corner radius = 25%`).
-   * **Pad Size:** **`1.50 mm` (along `2.54 mm` pitch) × `2.80 mm` (across edge)** so `~0.9 mm` of copper extends *outward* past the `18.0 mm` Nano R4 edge for effortless hand soldering of the castellated half-moons.
-   * **Copper / Mask Layers:** Ensure `F.Cu`, `F.Paste`, and `F.Mask` are checked (`B.Cu` unchecked).
-4. **Nano R4 Pin Connections (verify by pin number AND signal name):**
+1. **Castellated SMD Pads (`1` through `14`):**
+   * **Pad Type:** `SMD`, `Rounded Rectangle` (`Corner radius = 20%`), layers `F.Cu`, `F.Paste`, `F.Mask`.
+   * **Pad Size:** **`1.60 mm` (along `2.54 mm` pitch) × `2.00 mm` (across edge)** centered on `Y_local = ±8.25 mm` (`16.50 mm` span) so `~0.35 mm` of copper extends outward beyond the `17.8 mm` XIAO edge for quick, inspectable hand fillets.
+2. **Mandatory Underside Belly-Pad Keepout (`Keepout_XIAO_Underside_Pads`):**
+   * Create a **Rule Area (`Keepout: Tracks, Vias, Copper Pour`)** on `F.Cu` spanning **`X = 0.95 .. 16.90 mm`, `Y = 4.00 .. 16.10 mm`** directly beneath the XIAO body. This guarantees `100%` soldermask-covered bare FR-4 under all 16 exposed bottom pads (`BAT+/BAT-`, SWD, CAN) so zero shorts can ever occur!
+3. **XIAO RA4M1 Pin Connections (Placed at `(10.54, 10.00) mm`, Rotation `180°`, USB-C Facing West):**
 
-| KiCad Nano Pin # | Nano R4 Pad Name | `RA4M1` MCU Pin | Carrier PCB Net | Electrical Role |
-| :---: | :---: | :--- | :--- | :--- |
-| **Pin 27** | **`+5V`** | `VUSB` (after `D1`) | **`+5V_USB`** | Input power to `U3` (`MCP1700-3.3V` LDO Pin 3) + `C9` (`10 µF`) |
-| **Pin 18** | **`AREF`** | `P010 / VREFH0` | **`VCC_ANA`** | External `3.300 V` 14-bit ADC reference + `C13` (`100 nF` to `GND`) |
-| **Pin 20** | **`A1`** | `P000 / AN000` | **`ADC_IN`** | Dedicated 14-bit SAR ADC input (avoids `A0` DAC & `A4/A5` I2C) |
-| **Pins 4 & 29** | **`GND`** | `VSS / AVSS0` | **`GND`** | Bond **both** `GND` pads directly to `B.Cu` ground plane via vias |
-| *All other pins* | `D0–D13, A0, A2–A7, 3V3, VIN, RST` | — | *Unconnected* | Place KiCad **No-Connect (`X`)** flags in `Eeschema` |
+| XIAO Pad # | XIAO Pad Name | Board Coordinates (`mm`) | `RA4M1` MCU Pin | Carrier PCB Net | Electrical Role |
+| :---: | :---: | :---: | :--- | :--- | :--- |
+| **Pad 14** | **`5V`** | `(2.92, 1.75)` (North-West) | `VBUS` (via Schottky) | **`+5V_USB`** | Feeds `R13 = 10 Ω` (`1.58 kHz` USB LPF) along North edge |
+| **Pad 13** | **`GND`** | `(5.46, 1.75)` (North-West) | `VSS / AVSS0` | **`GND`** | Bonded via dual adjacent `0.6/0.3 mm` vias `(4.19, 1.75)` & `(6.73, 1.75)` to `B.Cu` `GND` plane |
+| **Pad 2** | **`D1 / A1`** | `(5.46, 18.25)` (South-West) | `P000 / AN000` | **`/ADC_IN`** | Dedicated 14-bit SAR ADC input (routed `100%` along South edge, `> 10.6 mm` from `+5V_USB`) |
+| *Pads 1, 3–12* | `D0, D2–D10, 3V3` | — | — | *Unconnected* | Explicit KiCad **No-Connect (`X`)** flags in `Eeschema` |
+
+> [!NOTE]
+> Unlike the larger Nano R4, the **Seeed Studio XIAO RA4M1** ties `AVCC0` / `VREFH0` internally to its onboard `3.3 V` regulator (no external `AREF` pin). Do **not** call `analogReference(AR_EXTERNAL)` in firmware; use the default `AR_DEFAULT` (`3.3 V`) reference with `analogReadResolution(14)`.
 
 ---
 
 ### 4.2 `OPA2365AIDR` (`U1`, `U2` — `SOIC-8`) Multi-Unit Pinout
 
 > [!IMPORTANT]
-> In KiCad `Eeschema`, dual op-amp symbols have **three units**: **Unit A** (Amplifier 1), **Unit B** (Amplifier 2), and **Unit C** (Power Pins `4` and `8`). **Do not forget to place `U1C` and `U2C`** on your schematic sheet, or your op-amps will have floating power pins on the PCB!
+> In KiCad `Eeschema`, dual op-amp symbols have **three units**: **Unit A** (Amplifier 1), **Unit B** (Amplifier 2), and **Unit C** (Power Pins `4` and `8`). Ensure `U1C` and `U2C` are placed and wired!
 
 | `SOIC-8` Pin | Function | **`U1` (`OPA2365AIDR`) Net** | **`U2` (`OPA2365AIDR`) Net** |
 | :---: | :---: | :--- | :--- |
@@ -119,103 +122,66 @@ The **Arduino Nano R4 (`ABX00142`)** has a flat underside and castellated half-h
 | **5** | `+IN B` | From `C4` (`1µF`) & `R8` (`45.3kΩ` to `VREF`) | **`VREF_DIV`** (`R5=100k`, `R6=100k`, `C8=10µF`) |
 | **6** | `-IN B` | Tied directly to **Pin 7 (`OUT_HPF`)** | Tied directly to **Pin 7 (`VREF`)** |
 | **7** | `OUT B` | `OUT_HPF` (Stage 2 `5 Hz` HPF Output $\rightarrow$ `R9`) | **`VREF`** (`1.650 V` Buffered Virtual Ground) |
-| **8** | **`V+`** | **`VCC_ANA`** (`+3.30 V`, decouple `<2mm` with `C11`) | **`VCC_ANA`** (`+3.30 V`, decouple `<2mm` with `C12`) |
+| **8** | **`V+`** | **`+3V3_ANA`** (`3.30 V`, decoupled `<2mm` by `C11`) | **`+3V3_ANA`** (`3.30 V`, decoupled `<2mm` by `C12`) |
 
 ---
 
-### 4.3 `MCP1700T-3302E/TT` (`U3` — `SOT-23-3`) Pinout Check
+### 4.3 `1.58 kHz` USB Power-Supply LPF (`R13`, `C9 || C13`) & `MCP1700T-3302E/TT` (`U3` — `SOT-23-3`)
 
-> [!WARNING]
-> **Double-check `SOT-23-3` regulator pin numbering!** Different LDO families swap `GND`, `VIN`, and `VOUT`. For Microchip **`MCP1700T-3302E/TT`** (`Package_TO_SOT_SMD:SOT-23`):
-> * **Pin 1:** **`GND`**
-> * **Pin 2:** **`VOUT`** (`VCC_ANA = +3.300 V` $\rightarrow$ `C10 = 10 µF` to `GND`)
-> * **Pin 3:** **`VIN`** (`+5V_USB` from Nano R4 Pin 27 $\rightarrow$ `C9 = 10 µF` to `GND`)
-
----
-
-### 4.4 External `SW1` (`EAR ↔ MIC`) Slide Switch & Universal `PJ-320A` (`J1`) Wiring
-
-To switch effortlessly between **Passive Earphones** (*Speaker-as-Mic*, zero DC bias) and **Electret Microphones** (`2.2 kΩ` DC bias to `3.30 V`) from outside the enclosure without opening the case or touching a soldering iron, the board integrates an ultraminiature right-angle SMD slide switch (**`SW1`**: `C&K PCM12SMTR` / `MSK12C02`, `6.7 × 2.6 × 1.4 mm`):
-
-1. **Built-In KiCad Symbol & Footprint (Zero Custom Library Required):**
-   * **Symbol:** `Switch:SW_SPDT` (`Pin 1 = A`, `Pin 2 = C [Common]`, `Pin 3 = B`).
-   * **Footprint:** `Button_Switch_SMD:SW_SPDT_PCM12` (ships with a built-in 3D `.step` model for Fusion 360 export; its 4 outer metal shell anchor pads are unnumbered `""`, so `Switch:SW_SPDT` maps with zero ERC/DRC pin mismatches).
-2. **Hum-Free Analog Wiring of `SW1` (Crucial Low-Noise Rule!):**
-   * **Never** route the raw sub-microvolt `VIN_RAW` trace out to an external mechanical switch! Instead, place `SW1` on the **low-impedance `+3.30 V` (`VCC_ANA`) side** of `R12` (`RMIC = 2.2 kΩ`):
-     * **`SW1` Pin 1 (`EAR` / Passive Earphone Position):** Place a KiCad **No-Connect (`X`)** flag. `R12` floats completely open-circuit, ensuring `0.00 mA` DC flows into `16–32 Ω` dynamic earphone coils.
-     * **`SW1` Pin 2 (`Common`):** Connect to Pad 1 of **`R12` (`2.2 kΩ`)**; connect Pad 2 of `R12` to **`VIN_RAW`** (ahead of `C1 = 68 nF`).
-     * **`SW1` Pin 3 (`MIC` / Electret Bias Position):** Connect to **`VCC_ANA` (`+3.300 V`)**. Supplies bias current to the electret capsule's internal JFET while `C1` (`68 nF`) blocks the `~1.6–2.2 V` DC bias from `U1A`.
-     * **Metal Shell Shielding:** In `Pcbnew`, tie `SW1`'s 4 outer mechanical SMD anchor pads to **`GND`** (click a shell pad $\rightarrow$ `E` $\rightarrow$ Net: `GND`) so touching the switch with a finger shunts ESD and `50 Hz` body capacitance straight to the bottom ground plane.
-3. **Direct Jumper-Free `PJ-320A` (`J1`) Wiring (Supports 3-Pole TRS Earphones, 4-Pole TRRS Earbuds & `3.5 mm` Electret Mics):**
-   * **4-pole smartphone earbuds (CTIA)** place speaker `GND` on **Ring 2**, whereas **3-pole TRS earphones** and **dedicated `3.5 mm` (`TS`/`TRS`) electret microphones** use **Sleeve** (or `Ring 2 + Sleeve`) as `GND`. Tying *only* `Sleeve` to `GND` would leave a 4-pole earbud's speaker return open-circuit!
-   * Wire `J1`'s 4 pads directly (zero solder jumpers needed):
-     1. **`Tip`** $\rightarrow$ Connect directly to **`VIN_RAW`** (carries the Left in-ear speaker coil in `EAR` mode, or the electret capsule signal + `2.2 kΩ` DC bias in `MIC` mode).
-     2. **`Ring 1`** $\rightarrow$ Leave unconnected (**No-Connect `X`** flag; Right earbud unused).
-     3. **`Ring 2` AND `Sleeve`** $\rightarrow$ Connect **both permanently to `GND`**. This guarantees a solid ground return whether you plug in 3-pole TRS earphones, 4-pole CTIA earbuds (while safely muting any unused external cord mic), or a dedicated `3.5 mm` electret microphone capsule!
-
-*(Before ordering PCBs, always verify the exact `Tip / Ring 1 / Ring 2 / Sleeve` pad numbers of your imported `PJ-320A` footprint against the supplier's mechanical drawing — e.g., LCSC `C95555`).*
+1. **Pre-LDO RC Low-Pass Filter:**
+   * Connect **`+5V_USB`** (from `A1` Pad `14`) to Pad 1 of **`R13 = 10 Ω`** (`0805`, `1%`, LCSC `C17415`).
+   * Connect Pad 2 of `R13` to net **`+5V_FILT`**, decoupled to `GND` by **`C9 = 10 µF`** (`X5R/X7R`) in parallel with **`C13 = 100 nF`** (`X7R`), forming a `1.576 kHz` low-pass pole (`~56 dB` attenuation at `1 MHz`) with `< 0.06 V` DC drop at normal `~5.8 mA` AFE load.
+   * Attach a **`PWR_FLAG`** (`#FLG02`) to `+5V_FILT` in `Eeschema` so KiCad's ERC knows `U3` Pin 3 (`power_in`) is driven through passive series resistor `R13`.
+2. **`MCP1700T-3302E/TT` (`U3` — `SOT-23-3`) Pinout:**
+   * **Pin 1:** **`GND`**
+   * **Pin 2:** **`VOUT`** (`+3V3_ANA = +3.300 V` $\rightarrow$ `C10 = 10 µF` to `GND`)
+   * **Pin 3:** **`VIN`** (`+5V_FILT` from `R13` / `C9` / `C13`)
 
 ---
 
-## 5. Step 4 — Schematic Capture (`Eeschema`) & Zero-Error ERC Checklist
+### 4.4 `JP1` (`EAR / MIC`) 2-Pad SMD Solder Jumper & Universal `PJ-320A` (`J1`) Wiring
 
-1. Draw the schematic left-to-right matching [`AFE_Cardiac_5-45Hz.asc`](AFE_Cardiac_5-45Hz.asc), placing net labels (`VIN_RAW`, `IN_POS`, `OUT_PRE`, `OUT_HPF`, `OUT_LPF`, `ADC_IN`, `VCC_ANA`, `VREF`, `+5V_USB`, `GND`).
-2. **Place `PWR_FLAG` symbols (`P` $\rightarrow$ `power:PWR_FLAG`)** to satisfy KiCad's Electrical Rules Checker:
-   * Attach one `PWR_FLAG` to **`GND`**.
-   * Attach one `PWR_FLAG` to **`+5V_USB`** (since Nano R4's `+5V` pin is often typed as `Power Input` or `Bidirectional` in module symbols, feeding power from USB-C).
-3. Place **6 flat SMD Test Points** (`TestPoint_Pad_D1.2mm`) on:
-   * `TP1` = `VIN_RAW`, `TP2` = `OUT_PRE`, `TP3` = `OUT_HPF`, `TP4` = `ADC_IN`, `TP5` = `VREF`, `TP6` = `GND`.
-4. Run **Inspect $\rightarrow$ Electrical Rules Checker (`ERC`)**:
-   * Verify **`0 Errors, 0 Warnings`** before opening `Pcbnew`.
-   * Double-check that **`C6` (`CBL = 100 nF`)** connects to **`VREF`** (not `GND`), **`C7` (`COUT = 100 nF`)** connects to **`GND`** (not `VREF`), and **`C8` (`CREF = 10 µF`)** sits on **`VREF_DIV` (`U2` Pin 5)** rather than directly on `U2` Pin 7!
+Replacing the mechanical slide switch with a flat 2-pad SMD solder jumper (**`JP1`**: `SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm`) eliminates contact wear, BOM cost, and enclosure side-slot cutouts:
 
----
-
-## 6. Step 5 — PCB Layout (`Pcbnew`), Guard Ring & Mixed-Signal Routing
-
-### 6.1 Board Outline & Mechanical Keepouts
-1. Select layer **`Edge.Cuts`**, set grid to `0.5 mm`, and draw a **`68.0 mm × 20.0 mm`** rectangle (`X = 0 .. 68.0 mm`, `Y = 0 .. 20.0 mm`) with `1.0 mm` rounded corners (`Fillet Lines`).
-2. Draw **`2.5 × 2.5 mm` Rule Areas (Keepout: Footprints & Tracks)** on `F.Cu` at all **4 board corners** so the screwless Fusion 360 enclosure snap-fit posts clamp directly onto bare PCB corners without needing space-wasting M2/M3 screw holes.
-
-### 6.2 Component Placement Coordinates (Reference Origin = Top-Left `(0, 0)`)
-1. **Left Digital Zone (`X = 0.0 .. 45.0 mm`):**
-   * Place **`A1` (`Arduino Nano R4`)** centered vertically (`Y = 10.0 mm`) with its left board edge at `X = 0.3 mm` so the onboard **USB-C receptacle overhangs the left edge by `~1.3 mm`** (protruding cleanly into the enclosure wall).
-   * Orient USB-C pointing **Left (`West`)**: verify that the **South row** contains `AREF` (Pin 18), `A1` (Pin 20), `+5V` (Pin 27), and `GND` (Pin 29).
-2. **Center Isolation Barrier (`X = 45.0 .. 49.5 mm`):**
-   * Place **`U3` (`MCP1700-3.3V` LDO)** + `C9` (`10 µF`) + `C10` (`10 µF`) at the bottom (`Y ≈ 14.5 mm`), immediately adjacent to Nano R4's `+5V` (Pin 27) and `GND` (Pin 29) pads.
-   * Place the **`VREF` divider (`R5, R6 = 100 kΩ`, `C8 = 10 µF`)** in the upper barrier (`Y ≈ 5.5 mm`).
-3. **Right Quiet Analog Island (`X = 49.5 .. 68.0 mm`):**
-   * Place **`J1` (`PJ-320A`)** slightly above vertical center (`Y ≈ 9.1 mm`) on the right edge (`X = 68.0 mm`), with its `Ø5.0 × 2.0 mm` cylindrical front collar overhanging `X = 68.0 .. 70.0 mm`. This leaves generous clearance along the South edge directly below `J1` for `SW1`.
-   * Place **`SW1` (`SW_SPDT_PCM12` — `EAR / MIC` Slide Switch)** along the **South edge (`X ≈ 61.6 mm` center, spanning `X = 58.3 .. 65.0 mm`, `Y ≈ 18.5 mm`)**, clearing the `2.5 × 2.5 mm` bottom-right snap-fit corner keepout (`X = 65.5 .. 68.0 mm`). Orient `SW1` so its side actuator knob overhangs the `Y = 20.0 mm` South `Edge.Cuts` line by **`~1.3 mm`**, protruding through a `4.2 × 1.8 mm` side slot in the 3D-printed enclosure wall. Add silkscreen labels `EAR` (left) and `MIC` (right) on `F.Silkscreen`.
-   * Place **`U1` (`OPA2365`: Preamp + HPF)** in the lower-left of the analog island (`X ≈ 52.2 mm, Y ≈ 14.8 mm`), close to `J1` and `R12`, with bypass cap **`C11` (`100 nF`) `< 1.5 mm` from `U1` Pin 8**.
-   * Place **`U2` (`OPA2365`: LPF + `VREF` Buffer)** in the upper-left of the analog island (`X ≈ 52.2 mm, Y ≈ 4.6 mm`), with bypass cap **`C12` (`100 nF`) `< 1.5 mm` from `U2` Pin 8**.
-   * Place **`C7` (`COUT = 100 nF`)** and **`C13` (`CAREF = 100 nF`)** **within `2.0 mm` of Nano R4's `A1` (Pin 20) and `AREF` (Pin 18) pads**, respectively, each with an immediate `GND` via straight down to `B.Cu`.
-
-### 6.3 Drawing the Active `VREF` Guard Ring Around `IN_POS`
-Node `IN_POS` (`U1` Pin 3, between `C1 = 68 nF` and `R1 = 1 MΩ`) has a **`1 MΩ` impedance**, making it susceptible to `50 Hz` electric-field coupling and solder-flux leakage currents from the nearby `+3.30 V` supply pin (`U1` Pin 4/8):
-
-1. Keep the `IN_POS` trace **shorter than `3.5 mm`** on `F.Cu` with **zero vias**.
-2. Select **`F.Cu`**, start a `0.25 mm` track from the **`VREF`** net (`1.650 V` low-impedance output of `U2B`), and route a closed loop completely encircling **`U1` Pin 3**, the `IN_POS` pad of **`C1` (`68 nF`)**, and the `IN_POS` pad of **`R1` (`1 MΩ`)**.
-   * Because the guard trace sits at the exact same DC potential (`1.650 V`) as `IN_POS`, surface leakage current across the FR-4 solder mask drops to $I_{\text{leak}} = \frac{1.650\text{ V} - 1.650\text{ V}}{R_{\text{surface}}} = 0\text{ A}$!
-
-### 6.4 Ground Plane Pour (`B.Cu`) & Stitching Vias
-1. Select **`B.Cu`** $\rightarrow$ **Add Filled Zone (`Ctrl+Shift+Z`)** $\rightarrow$ assign net **`GND`** across the entire `68.0 × 20.0 mm` board outline (`Clearance = 0.25 mm`, `Thermal Reliefs` enabled for easy hand soldering).
-2. **Rule #1 of Mixed-Signal Layout:** Route `95%+` of signal traces on **`F.Cu`**. If you must jump a single crossing on `B.Cu`, keep that jumper **shorter than `2.5 mm`** and never cut across the Nano R4 / Analog Island boundary.
-3. Place `10–15` **`GND` stitching vias (`0.6 / 0.3 mm`)** around `J1`, `U3`, `C7`, `C11–C13`, and along the perimeter of the Analog Island, then press **`B`** to rebuild copper zones.
-4. Run **Inspect $\rightarrow$ Design Rules Checker (`DRC`)** and confirm **`0 Errors, 0 Unconnected Items`**.
+1. **Footprint Geometry (`JP1`):**
+   * Two `1.0 × 1.5 mm` rounded-rectangle pads on `F.Cu` + `F.Mask` at `1.30 mm` center pitch (`0.30 mm` solder-bridge gap).
+   * **Excluded from `F.Paste`**, BOM (`in_bom no` / copper-only), and Pick-and-Place so PCBA boards arrive **OPEN (`EAR` mode)** by default.
+2. **Low-Noise Wiring of `JP1`:**
+   * Place `JP1` on the **low-impedance `+3V3_ANA` side** of `R12` (`2.2 kΩ`):
+     * **`JP1` Pad 1:** Connected to **`+3V3_ANA`**.
+     * **`JP1` Pad 2:** Connected to Pad 1 of **`R12` (`2.2 kΩ`)**; Pad 2 of `R12` connects to **`VIN_RAW`** (ahead of `C1 = 68 nF`).
+   * **Default (`OPEN = EAR`):** `R12` floats open-circuit (`0.00 mA` DC into `16–32 Ω` dynamic earphone coils).
+   * **Solder-Bridged (`BRIDGE = MIC`):** Supplies `+3.30 V` through `2.2 kΩ` to power electret microphone JFET capsules while `C1` (`68 nF`) blocks DC from `U1A+`.
+3. **Universal `PJ-320A` (`J1`) Wiring:**
+   * **`Pad 2 (Tip)`** $\rightarrow$ **`VIN_RAW`** (protected by adjacent bidirectional ESD diode `D1` `PESD3V3L1BA` with dual `GND` vias).
+   * **`Pad 3 (Ring 1)`** $\rightarrow$ **No-Connect (`X`)**.
+   * **`Pad 1 (Sleeve)` AND `Pad 4 (Ring 2)`** $\rightarrow$ **`GND`** (supports both 3-pole TRS earphones/mics and 4-pole CTIA earbuds).
 
 ---
 
-## 7. Step 6 — Exporting Fabrication Files & 3D CAD Model
+## 5. Step 4 — PCB Layout (`48.0 × 20.0 mm`) & Zero-Crossing Barrier Column
 
-### 7.1 Exporting `STEP` 3D Model for Fusion 360 Enclosure Co-Design
-* In `Pcbnew`, go to **File $\rightarrow$ Export $\rightarrow$ STEP...**, check **`Export board body`**, **`Export components`**, and **`Fuse shapes into single model`**, and save to `hardware_enclosure/EarScope_NanoR4_PCB.step`.
+### 5.1 Board Outline & Mechanical Keepouts
+1. **`Edge.Cuts`:** Closed **`48.0 mm × 20.0 mm`** outline (`X = 0 .. 48.0 mm`, `Y = 0 .. 20.0 mm`).
+2. **Enclosure Corner Keepouts:** Bare `F.Cu` keepouts at `(0..2.5, 0..0.60)`, `(0..2.5, 19.40..20.0)`, `(45.5..48.0, 0..2.5)`, and `(45.5..48.0, 17.5..20.0)` for the screwless snap-fit enclosure rails/posts.
+3. **XIAO Belly-Pad Keepout:** `Keepout_XIAO_Underside_Pads` at `(0.95..16.90, 4.00..16.10)` blocking all `F.Cu` tracks/pours and all vias beneath `A1`'s 16 bottom pads.
 
-### 7.2 Exporting Gerbers, Drill, BOM & Pick-and-Place (`JLCPCB` / `PCBWay`)
-1. **Gerbers:** **File $\rightarrow$ Fabrication Outputs $\rightarrow$ Gerbers (`.gbr`)...**
-   * Output directory: `hardware_pcb/gerber_files/`
-   * Included Layers: `F.Cu`, `B.Cu`, `F.Paste`, `F.Silkscreen`, `B.Silkscreen`, `F.Mask`, `B.Mask`, `Edge.Cuts`.
-   * Check **`Use Protel filename extensions`** and **`Subtract soldermask from silkscreen`** $\rightarrow$ click **Plot**.
-2. **Drill Files:** Click **Generate Drill Files...** inside the same dialog:
-   * Format: `Excellon`, Units: `Millimeters`, Zeros: `Decimal format` $\rightarrow$ click **Generate Drill File**.
-3. Zip the contents of `hardware_pcb/gerber_files/` into `EarScope_NanoR4_Gerbers.zip` and verify in KiCad's **Gerber Viewer** (`GerbView`) before uploading.
+### 5.2 Three-Zone Placement Coordinates
+1. **West Digital Zone (`X = 0.0 .. 21.1 mm`):**
+   * **`A1` (`Seeed Studio XIAO RA4M1`)** at `(10.54, 10.00) mm`, rotation `180°` (USB-C overhangs `X = -2.0 .. 0.0 mm`).
+2. **Center Power LPF + LDO & Anti-Aliasing Barrier Column (`X = 21.1 .. 25.0 mm`, Top-Power / Bottom-ADC):**
+   * **North Power Chain:** `R13` `(22.75, 2.15)` $\rightarrow$ `C9` `(22.75, 4.20)` $\rightarrow$ `C13` `(22.75, 6.25)` $\rightarrow$ `U3` `(22.80, 9.10)` $\rightarrow$ `C10` `(22.75, 12.00)`.
+   * **South ADC Anti-Aliasing Chain:** `R11` `(22.75, 14.05)` $\rightarrow$ `C7` `(22.75, 16.10)` $\rightarrow$ `TP4` `(21.95, 18.00)` & `TP6` `(23.70, 18.00)`.
+   * **Why This Ordering Matters:** Keeping Power at North (`Y ≤ 3.38 mm` for `+5V_USB`) and `/ADC_IN` at South (`Y ≥ 14.05 mm`) separates noisy USB input power from the 14-bit analog output by **`> 10.6 mm` with zero crossings and zero vias on either net!**
+3. **East Quiet Analog Island (`X = 25.0 .. 48.0 mm`):**
+   * **`U2` (`LPF + VREF`)** at `(31.80, 5.70)` + `C12` (`100 nF` `< 2 mm` from Pin 8); **`U1` (`Preamp + HPF`)** at `(31.80, 14.10)` + `C11` (`100 nF` `< 2 mm` from Pin 8).
+   * **Active `VREF` Guard Ring:** Encircles high-impedance node `IN_POS` (`U1` Pin 3, `C1`, `R1`) on `F.Cu` at `1.650 V` (`0 A` surface leakage).
+   * **`JP1` (`EAR / MIC` Solder Jumper)** at `(41.80, 17.80)` next to `R12` `(42.50, 13.70)`.
+   * **`J1` (`PJ-320A`)** at `(48.00, 8.80, -90°)` with `D1` (`PESD3V3L1BA`) at `(45.20, 4.50)`.
+
+---
+
+## 6. Step 5 — Exporting Fabrication Files & 3D CAD Model
+
+1. **STEP 3D Export for Fusion 360:** In `Pcbnew`, choose **File $\rightarrow$ Export $\rightarrow$ STEP...**, check **`Export board body`**, **`Export components`**, and **`Fuse shapes into single model`**, and save to `hardware_enclosure/EarScope_XIAO_RA4M1_PCB.step`.
+2. **Gerber & Excellon Outputs:** Pre-generated and verified in [`fabrication_files/gerbers/`](../fabrication_files/gerbers/) and [`fabrication_files/EarScope_XIAO_RA4M1_Gerbers_JLCPCB.zip`](../fabrication_files/EarScope_XIAO_RA4M1_Gerbers_JLCPCB.zip), alongside turnkey [`EarScope_JLCPCB_BOM.csv`](../fabrication_files/EarScope_JLCPCB_BOM.csv) and [`EarScope_JLCPCB_CPL.csv`](../fabrication_files/EarScope_JLCPCB_CPL.csv).

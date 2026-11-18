@@ -3,7 +3,7 @@
   <rect x="1" y="1" width="958" height="678" rx="10" ry="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 
   <text x="480" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">EarScope Cardiac AFE — AC Frequency &amp; Phase Response (.ac dec 200 0.05 1Meg)</text>
-  <text x="480" y="50" text-anchor="middle" font-size="12" fill="#475569">Target: Arduino Nano R4 (VCC_ANA = AREF = 3.30 V, V_REF = 1.650 V) | C_IN = 68 nF, C_F = 1 nF, R_OUT = 100 Ω, C_OUT = 100 nF</text>
+  <text x="480" y="50" text-anchor="middle" font-size="12" fill="#475569">Target: Seeed Studio XIAO RA4M1 (VCC_ANA = 3.30 V, V_REF = 1.650 V) | C_IN = 68 nF, C_F = 1 nF, R_OUT = 100 Ω, C_OUT = 100 nF</text>
   <rect x="319.17" y="68" width="106.70" height="337" fill="#dcfce7" opacity="0.55"/>
   <rect x="319.17" y="455" width="106.70" height="170" fill="#dcfce7" opacity="0.45"/>
   <line x1="88.00" y1="68" x2="88.00" y2="405" stroke="#f1f5f9" stroke-width="1"/>
