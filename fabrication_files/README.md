@@ -12,6 +12,7 @@ This folder contains the complete, verified **PCB Fabrication (Gerber RS-274X + 
 | **[`EarScope_JLCPCB_BOM.csv`](EarScope_JLCPCB_BOM.csv)** | Turnkey SMT Bill of Materials (`19` LCSC lines / `30` populated components with exact `Cxxxxx` LCSC Part #s, incl. `R13 = 10R` Basic `C17415`) | **Step 2 — Add BOM File** |
 | **[`EarScope_JLCPCB_CPL.csv`](EarScope_JLCPCB_CPL.csv)** | Component Placement List / Pick-and-Place (`30` parts in `mm`, Top layer, `48.0 × 20.0 mm` coordinate frame) | **Step 2 — Add CPL File** |
 | **[`EarScope_Master_BOM.csv`](EarScope_Master_BOM.csv)** | Full Engineering Master BOM (`31` BOM lines, including `A1` `Seeed Studio XIAO RA4M1 102010551` & `R3` `DNP`; `JP1` is bare PCB copper) | Engineering / Sourcing Reference |
+| **[`EarScope_AliExpress_BOM.csv`](EarScope_AliExpress_BOM.csv)** | DIY Hand-Soldering BOM (`20` orderable lines) with direct AliExpress search/order links, typical pack sizes, and estimated USD / ILS pricing (`~$8.36` per board / `~$30.00` full cart) | DIY / AliExpress Component Ordering |
 | **[`gerbers/`](gerbers/)** | Unpacked individual Gerber (`.gbr`), Excellon drill (`.drl`), and job (`.gbrjob`) files | Direct CAM / GitHub Inspection |
 
 ### Unpacked Layer Inventory (`gerbers/`)

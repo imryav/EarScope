@@ -207,6 +207,7 @@ EarScope/
 │   ├── EarScope_JLCPCB_BOM.csv                     # Turnkey LCSC SMT Bill of Materials (19 lines / 30 parts)
 │   ├── EarScope_JLCPCB_CPL.csv                     # Turnkey Pick-and-Place coordinates (mm, Top side)
 │   ├── EarScope_Master_BOM.csv                     # Full 31-part engineering BOM (incl. Seeed XIAO RA4M1)
+│   ├── EarScope_AliExpress_BOM.csv                 # DIY AliExpress ordering BOM with links & USD/ILS pricing
 │   └── gerbers/                                    # Unpacked .gbr, .drl & .gbrjob CAM layers
 ├── docs/
 │   ├── AFE_Cardiac_5-45Hz.asc                      # Finalized LTspice schematic (XIAO RA4M1 + USB Power LPF)
