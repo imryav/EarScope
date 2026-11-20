@@ -1,0 +1,8 @@
+{
+	"autodeskProduct": "Fusion",
+	"type": "script",
+	"author": "EarScope",
+	"description": {"": "Generates EarScope enclosure (base + lid) from PCB dimensions"},
+	"supportedOS": "windows|mac",
+	"editEnabled": true
+}
