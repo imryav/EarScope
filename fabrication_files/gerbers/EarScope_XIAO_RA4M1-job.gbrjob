@@ -3,23 +3,23 @@
     "GenerationSoftware": {
       "Vendor": "KiCad",
       "Application": "Pcbnew",
-      "Version": "10.0"
+      "Version": "10.0.8"
     },
-    "CreationDate": "2026-11-18T12:00:00+00:00"
+    "CreationDate": "2026-11-20T11:17:39+02:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
       "Name": "EarScope_XIAO_RA4M1",
-      "GUID": "45617253-636f-4706-955f-5849414f5234",
-      "Revision": "2.0"
+      "GUID": "45617253-636f-4706-955f-5849414f5f52",
+      "Revision": "2.1"
     },
     "Size": {
-      "X": 48.0,
-      "Y": 20.0
+      "X": 48.1,
+      "Y": 25.1
     },
     "LayerNumber": 2,
     "BoardThickness": 1.6,
-    "Finish": "HASL"
+    "Finish": "None"
   },
   "DesignRules": [
     {
@@ -27,7 +27,7 @@
       "PadToPad": 0.2,
       "PadToTrack": 0.2,
       "TrackToTrack": 0.2,
-      "MinLineWidth": 0.25,
+      "MinLineWidth": 0.2,
       "TrackToRegion": 0.25,
       "RegionToRegion": 0.25
     }
@@ -45,12 +45,12 @@
     },
     {
       "Path": "EarScope_XIAO_RA4M1-F_Paste.gbr",
-      "FileFunction": "Paste,Top",
+      "FileFunction": "SolderPaste,Top",
       "FilePolarity": "Positive"
     },
     {
       "Path": "EarScope_XIAO_RA4M1-B_Paste.gbr",
-      "FileFunction": "Paste,Bot",
+      "FileFunction": "SolderPaste,Bot",
       "FilePolarity": "Positive"
     },
     {
@@ -65,17 +65,17 @@
     },
     {
       "Path": "EarScope_XIAO_RA4M1-F_Mask.gbr",
-      "FileFunction": "Soldermask,Top",
+      "FileFunction": "SolderMask,Top",
       "FilePolarity": "Negative"
     },
     {
       "Path": "EarScope_XIAO_RA4M1-B_Mask.gbr",
-      "FileFunction": "Soldermask,Bot",
+      "FileFunction": "SolderMask,Bot",
       "FilePolarity": "Negative"
     },
     {
       "Path": "EarScope_XIAO_RA4M1-Edge_Cuts.gbr",
-      "FileFunction": "Profile,NP",
+      "FileFunction": "Profile",
       "FilePolarity": "Positive"
     }
   ],
