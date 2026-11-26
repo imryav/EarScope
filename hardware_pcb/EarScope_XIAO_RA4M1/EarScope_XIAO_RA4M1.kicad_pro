@@ -522,42 +522,94 @@
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
         "name": "Default",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "pcb_color": "rgba(100, 116, 139, 1.000)",
         "priority": 2147483647,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(100, 116, 139, 1.000)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
-        "wire_width": 6
+        "wire_width": 8
       },
       {
         "clearance": 0.35,
         "name": "HighZ_Input",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "pcb_color": "rgba(22, 163, 74, 1.000)",
         "priority": 0,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(22, 163, 74, 1.000)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
-        "via_drill": 0.3
+        "via_drill": 0.3,
+        "wire_width": 14
+      },
+      {
+        "clearance": 0.2,
+        "name": "Analog_Signal",
+        "pcb_color": "rgba(22, 163, 74, 1.000)",
+        "priority": 1,
+        "schematic_color": "rgba(22, 163, 74, 1.000)",
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 14
       },
       {
         "clearance": 0.25,
         "name": "Power",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "pcb_color": "rgba(220, 38, 38, 1.000)",
+        "priority": 2,
+        "schematic_color": "rgba(220, 38, 38, 1.000)",
         "track_width": 0.4,
         "tuning_profile": "",
         "via_diameter": 0.6,
-        "via_drill": 0.3
+        "via_drill": 0.3,
+        "wire_width": 14
+      },
+      {
+        "clearance": 0.25,
+        "name": "Ground",
+        "pcb_color": "rgba(17, 24, 39, 1.000)",
+        "priority": 3,
+        "schematic_color": "rgba(17, 24, 39, 1.000)",
+        "track_width": 0.4,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 14
       }
     ],
     "meta": {
       "version": 5
     },
-    "net_colors": {},
+    "net_colors": {
+      "+5V_USB": "rgba(220, 38, 38, 1.000)",
+      "/+5V_FILT": "rgba(220, 38, 38, 1.000)",
+      "+3V3_ANA": "rgba(220, 38, 38, 1.000)",
+      "/+3V3_U1": "rgba(220, 38, 38, 1.000)",
+      "/+3V3_U2": "rgba(220, 38, 38, 1.000)",
+      "+3V3_DIG": "rgba(220, 38, 38, 1.000)",
+      "/MIC_BIAS": "rgba(220, 38, 38, 1.000)",
+      "GND": "rgba(17, 24, 39, 1.000)",
+      "/VIN_RAW": "rgba(22, 163, 74, 1.000)",
+      "/IN_POS": "rgba(22, 163, 74, 1.000)",
+      "/PRE_NEG": "rgba(22, 163, 74, 1.000)",
+      "/OUT_PRE": "rgba(22, 163, 74, 1.000)",
+      "/HPF_MID": "rgba(22, 163, 74, 1.000)",
+      "/HPF_POS": "rgba(22, 163, 74, 1.000)",
+      "/OUT_HPF": "rgba(22, 163, 74, 1.000)",
+      "/LPF_MID": "rgba(22, 163, 74, 1.000)",
+      "/LPF_POS": "rgba(22, 163, 74, 1.000)",
+      "/OUT_LPF": "rgba(22, 163, 74, 1.000)",
+      "/ADC_IN": "rgba(22, 163, 74, 1.000)",
+      "/VREF": "rgba(100, 116, 139, 1.000)",
+      "/VREF_DIV": "rgba(100, 116, 139, 1.000)",
+      "/LED_GRN": "rgba(100, 116, 139, 1.000)",
+      "/LED_RED": "rgba(100, 116, 139, 1.000)",
+      "Net-(LED1-A)": "rgba(100, 116, 139, 1.000)",
+      "Net-(LED2-A)": "rgba(100, 116, 139, 1.000)"
+    },
     "netclass_assignments": {},
     "netclass_patterns": [
       {
@@ -565,12 +617,44 @@
         "pattern": "/IN_POS"
       },
       {
-        "netclass": "Power",
-        "pattern": "GND"
+        "netclass": "Analog_Signal",
+        "pattern": "/VIN_RAW"
       },
       {
-        "netclass": "Power",
-        "pattern": "+3V3_ANA"
+        "netclass": "Analog_Signal",
+        "pattern": "/PRE_NEG"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/OUT_PRE"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/HPF_MID"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/HPF_POS"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/OUT_HPF"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/LPF_MID"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/LPF_POS"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/OUT_LPF"
+      },
+      {
+        "netclass": "Analog_Signal",
+        "pattern": "/ADC_IN"
       },
       {
         "netclass": "Power",
@@ -582,11 +666,27 @@
       },
       {
         "netclass": "Power",
+        "pattern": "+3V3_ANA"
+      },
+      {
+        "netclass": "Power",
         "pattern": "/+3V3_U1"
       },
       {
         "netclass": "Power",
         "pattern": "/+3V3_U2"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "+3V3_DIG"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "/MIC_BIAS"
+      },
+      {
+        "netclass": "Ground",
+        "pattern": "GND"
       }
     ]
   },
