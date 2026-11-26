@@ -5,17 +5,17 @@
       "Application": "Pcbnew",
       "Version": "10.0.8"
     },
-    "CreationDate": "2026-11-20T11:17:39+02:00"
+    "CreationDate": "2026-11-26T11:50:51+00:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
       "Name": "EarScope_XIAO_RA4M1",
       "GUID": "45617253-636f-4706-955f-5849414f5f52",
-      "Revision": "2.1"
+      "Revision": "2.2"
     },
     "Size": {
       "X": 48.1,
-      "Y": 25.1
+      "Y": 20.1
     },
     "LayerNumber": 2,
     "BoardThickness": 1.6,

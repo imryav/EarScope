@@ -1,9 +1,9 @@
 # EarScope enclosure generator for Autodesk Fusion 360 (Python API).
-# Board data taken from hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_pcb
-#   Outline 48 x 25 mm, no mounting holes
+# Board data taken from hardware_pcb/EarScope_XIAO_RA4M1/EarScope_XIAO_RA4M1.kicad_pcb (Rev 2.2)
+#   Outline 48 x 20 mm, no mounting holes
 #   A1 XIAO RA4M1: USB-C overhangs left edge (x=0) by 2 mm, centre y=10
 #   J1 PJ-320A AUX: opening on right edge (x=48), centre y=8.8
-#   LED1 (18.95, 23.6), LED2 (11.33, 23.6)
+#   LED2 (9.50, 10.00) & LED1 (14.00, 10.00) on B.Cu (bottom side, facing Base floor)
 # KiCad Y points down; here Fusion Y = PCB_H - KiCad Y.
 # All values in mm. Edit, then re-run. Heights marked VERIFY should be
 # measured on the real parts with calipers.
@@ -11,11 +11,11 @@
 import adsk.core, adsk.fusion, traceback
 
 # ---------------- parameters (mm) ----------------
-PCB_W, PCB_H, PCB_T = 48.0, 25.0, 1.6
+PCB_W, PCB_H, PCB_T = 48.0, 20.0, 1.6
 CLR       = 0.4    # gap PCB edge <-> inner wall
 WALL      = 2.0
 FLOOR     = 2.0
-STANDOFF  = 2.0    # floor top -> PCB bottom
+STANDOFF  = 2.0    # floor top -> PCB bottom (clears 0.85 mm 0805 LEDs on B.Cu)
 PARTS_H   = 6.0    # tallest part above PCB top (J1 ~5 mm)  VERIFY
 TOP_GAP   = 0.5
 LID_T     = 1.6
@@ -32,8 +32,8 @@ AUX_Y_K   = 8.8            # KiCad Y of jack centre
 AUX_D     = 7.0            # opening dia (PJ-320A nose D5.6 + print tolerance)
 AUX_Z     = 2.5            # jack centre above PCB top (PJ320 datasheet: body 6x5, nose D5)
 
-LEDS_K    = [(11.33, 23.6), (18.95, 23.6)]
-LED_D     = 2.0            # lid window dia
+LEDS_K    = [(9.50, 10.00), (14.00, 10.00)]  # B.Cu 0805 LEDs under XIAO
+LED_D     = 2.0            # base-floor window dia
 
 STANDOFF_D     = 3.0
 STANDOFF_INSET = 2.5       # from PCB corner
@@ -94,6 +94,10 @@ def run(context):
         # AUX opening, right wall
         ay, az = fy(AUX_Y_K), pcb_top + AUX_Z
         cut(base, cyl((ix1 - 1, ay, az), (ox1 + 1, ay, az), AUX_D))
+        # B.Cu LED windows through Base floor (seamless face when inverted)
+        for lxk, lyk in LEDS_K:
+            x, y = lxk, fy(lyk)
+            cut(base, cyl((x, y, -1), (x, y, FLOOR + 1), LED_D))
 
         # ---------- LID ----------
         lid = box(ox0, oy0, base_top, ox1, oy1, base_top + LID_T)
@@ -103,9 +107,6 @@ def run(context):
         cut(lip, box(lx0 + LIP_W, ly0 + LIP_W, base_top - LIP_H - 1,
                      lx1 - LIP_W, ly1 - LIP_W, base_top + 1))
         union(lid, lip)
-        for lxk, lyk in LEDS_K:
-            x, y = lxk, fy(lyk)
-            cut(lid, cyl((x, y, base_top - LIP_H - 1), (x, y, base_top + LID_T + 1), LED_D))
 
         # ---------- PCB reference (for fit check) ----------
         pcb = box(0, 0, pcb_bot, PCB_W, PCB_H, pcb_top)
